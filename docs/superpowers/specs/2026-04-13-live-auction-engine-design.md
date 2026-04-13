@@ -87,14 +87,31 @@ Each piece has a single testable purpose:
 
 ### 3.3 Data flow
 
+The two hooks have a potential circular dependency: `useAuctionClock` owns `phase`, but `useSimulatedBidding` needs `phase` to know when to stop, and `useAuctionClock` needs access to `bids` (produced by `useSimulatedBidding`) at the moment it snapshots `topTwo`. The pattern that resolves this:
+
+1. `useAuctionClock` is called first. It owns `phase` state and advances it via its own `setTimeout` chain, independent of bid data.
+2. `useSimulatedBidding` is called second and reads `clock.phase` as a prop. It stops scheduling when `phase !== 'live'`.
+3. At the moment `phase` transitions to `main_ended`, the parent component reads the current `simBidding.bids` and calls `clock.setTopTwo(...)` with a computed `[investor, opponent]` tuple. The clock doesn't fetch bids itself; the parent pushes them in at the exact moment they matter.
+
 ```
   lot-detail-client.tsx
    │
-   ├── useAuctionClock(lot, investorBids)
-   │     returns { phase, msRemaining, topTwo, winner, closingRoundBids, placeClosingRoundBid }
+   ├── clock = useAuctionClock({ lot })
+   │     owns: phase state + timers
+   │     exposes: { phase, msRemaining, topTwo, winner, closingRoundBids,
+   │                setTopTwo, placeClosingRoundBid, concede }
    │
-   ├── useSimulatedBidding({ lotId, phase, investorJustBidAt, startingPrice, bidIncrement, initialBids })
-   │     returns { bids, currentHigh, bidCount, newBidFlash, placeInvestorBid }
+   ├── simBidding = useSimulatedBidding({ lotId, phase: clock.phase,
+   │                                      startingPrice, bidIncrement, initialBids })
+   │     reads: clock.phase
+   │     exposes: { bids, currentHigh, bidCount, newBidFlash, placeInvestorBid }
+   │
+   ├── useEffect(() => {
+   │     if (clock.phase === 'main_ended' && !clock.topTwo) {
+   │       clock.setTopTwo(computeTopTwo(simBidding.bids));
+   │     }
+   │   }, [clock.phase, simBidding.bids]);
+   │
    │
    ├── <BidPanel />
    │     consumes: currentHigh, newBidFlash, bidCount, phase
@@ -136,27 +153,38 @@ interface AuctionClockState {
   phase: AuctionPhase;
   msRemaining: number;
   extendedCount: number;
-  topTwo: [SimulatedBid, SimulatedBid] | null;
+  // topTwo[0] is ALWAYS the investor (guaranteed by topTwo force-inclusion, see §4.8).
+  // topTwo[1] is the highest-priced non-investor bid from the main auction.
+  // null until the parent calls setTopTwo() after phase transitions to main_ended.
+  topTwo: [investor: SimulatedBid, opponent: SimulatedBid] | null;
   winner: SimulatedBid | null;
   reserveMet: boolean;
+  // Opponent bids placed during the closing round. Investor bids placed via
+  // placeClosingRoundBid() also land here for unified display.
   closingRoundBids: SimulatedBid[];
 }
 
 interface UseAuctionClockOpts {
   lot: Lot;
-  allBids: SimulatedBid[];
-  investorBid: SimulatedBid | null;
 }
 
 interface UseAuctionClockResult extends AuctionClockState {
+  // Called by the parent exactly once, at the moment phase transitions to
+  // main_ended. The parent computes the tuple from useSimulatedBidding's
+  // bids array at that exact frame. See §3.3 data flow for the pattern.
+  setTopTwo: (pair: [investor: SimulatedBid, opponent: SimulatedBid]) => void;
+
+  // Called by ClosingRoundSheet when the investor confirms a raise.
   placeClosingRoundBid: (amount: number) => void;
+
+  // Called by ClosingRoundSheet when the investor taps "Let it go".
   concede: () => void;
 }
 
 export function useAuctionClock(opts: UseAuctionClockOpts): UseAuctionClockResult;
 ```
 
-Internal state transitions use a single `phaseTransitionRef` for `setTimeout` tracking so cleanup clears all pending phase transitions on unmount — the same pattern as the `useSimulatedBidding` review fix.
+Internal state transitions use a single `phaseTransitionRef` for `setTimeout` tracking so cleanup clears all pending phase transitions on unmount — the same pattern as the `useSimulatedBidding` review fix. The opponent AI also uses a tracked `opponentTimerRef` cleared on unmount.
 
 ### 4.2 `useSimulatedBidding` (updated)
 
@@ -187,6 +215,22 @@ interface UseSimulatedBiddingResult {
 ```
 
 Sim bid scheduling stops when `phase !== 'live'`. The `placeInvestorBid` callback pushes an investor bid into the `bids` array (marked with `is_investor: true`), sets a 10-second pause window during which sim ticks are skipped, and triggers `newBidFlash`.
+
+**Helper export** (used by the parent component to satisfy §3.3's `setTopTwo` call):
+
+```ts
+/**
+ * Given the current bids array from useSimulatedBidding, return the
+ * forced topTwo tuple: [investor's highest bid, highest non-investor bid].
+ * If the investor has no bid, fabricates one at starting_price_per_kg so
+ * the closing round always fires with investor participation.
+ */
+export function computeTopTwo(
+  bids: SimulatedBid[],
+  lot: Lot,
+  investorDisplayName: string
+): [investor: SimulatedBid, opponent: SimulatedBid];
+```
 
 ### 4.3 `BidConfirmationSheet`
 
@@ -280,7 +324,7 @@ interface PendingReviewSheetProps {
 
 **File:** `src/components/bid-panel.tsx` (update)
 
-Adds a new prop: `phase: AuctionPhase`. Renders nothing when `phase !== 'live'`. The primary bid button opens `BidConfirmationSheet` instead of placing the bid inline. On confirm, calls `onPlaceInvestorBid(amount, kg)`.
+Adds two new props: `phase: AuctionPhase` and `onPlaceInvestorBid: (amount: number, kgRequested: number) => void`. Renders nothing when `phase !== 'live'`. The primary bid button opens `BidConfirmationSheet` instead of placing the bid inline. On confirm, calls `onPlaceInvestorBid(amount, kg)` which the parent forwards to `simBidding.placeInvestorBid`.
 
 ---
 

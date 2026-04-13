@@ -1,6 +1,9 @@
 import { getLotById, getBidsForLot, sellers } from "@/lib/mock-data";
 import { LotDetailClient } from "./lot-detail-client";
 
+// Force per-request rendering so the countdown timestamps are always fresh.
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

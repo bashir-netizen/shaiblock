@@ -19,7 +19,8 @@ import {
   Eye,
 } from "lucide-react";
 import type { Lot, Bid, Profile } from "@/lib/types";
-import { formatPrice, formatKg, getCountryFlag, cn } from "@/lib/utils";
+import { formatKg, getCountryFlag, cn } from "@/lib/utils";
+import { PriceDisplay } from "@/components/price-display";
 import { TEA_TYPES, HARVEST_SEASONS, PROCESSING_METHODS } from "@/lib/constants";
 import { CuppingRadar } from "@/components/cupping-radar";
 import { BidPanel } from "@/components/bid-panel";
@@ -332,14 +333,16 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
                 <div className="flex items-start gap-2 text-sm">
                   <FlaskConical className="w-4 h-4 text-muted mt-0.5" />
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-muted font-semibold">
+                    <p className="text-[10px] uppercase tracking-widest text-muted font-semibold mb-0.5">
                       Sample price
                     </p>
-                    <p className="font-semibold text-foreground">
-                      {lot.sample_available && lot.sample_price
-                        ? `${formatPrice(lot.sample_price)}`
-                        : "Not available"}
-                    </p>
+                    {lot.sample_available && lot.sample_price ? (
+                      <PriceDisplay amountUSD={lot.sample_price} size="sm" />
+                    ) : (
+                      <p className="font-semibold text-foreground">
+                        Not available
+                      </p>
+                    )}
                   </div>
                 </div>
                 {lot.sample_available && (
@@ -363,7 +366,6 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
             <BidPanel
               lot={lot}
               initialHighBid={initialHighBid}
-              initialBids={bids}
               currentHigh={currentHigh}
               newBidFlash={newBidFlash}
               bidCount={bidCount}
@@ -378,7 +380,6 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
         <BidPanel
           lot={lot}
           initialHighBid={initialHighBid}
-          initialBids={bids}
           currentHigh={currentHigh}
           newBidFlash={newBidFlash}
           bidCount={bidCount}

@@ -24,6 +24,11 @@ function randomBuyer() {
   return { name, city };
 }
 
+function buyerHandle(fullName: string): string {
+  const [first, last] = fullName.split(" ");
+  return `${first} ${last?.[0] ?? ""}.`;
+}
+
 export function useSimulatedBidding(opts: {
   lotId: string;
   startingPrice: number;
@@ -43,11 +48,11 @@ export function useSimulatedBidding(opts: {
 
   // Build initial simulated bids from the seed data
   const [bids, setBids] = useState<SimulatedBid[]>(() =>
-    initialBids.map((b, i) => {
+    initialBids.map((b) => {
       const { name, city } = randomBuyer();
       return {
         ...b,
-        buyer_display_name: `${name.split(" ")[0]} ${name.split(" ")[1]?.[0] || ""}.`,
+        buyer_display_name: buyerHandle(name),
         buyer_city: city,
       };
     })
@@ -60,6 +65,7 @@ export function useSimulatedBidding(opts: {
   const [lastBidTime, setLastBidTime] = useState<number>(Date.now());
   const [newBidFlash, setNewBidFlash] = useState(false);
   const priceRef = useRef(currentHigh);
+  const initialKgRef = useRef(initialBids[0]?.kg_requested || 1);
 
   useEffect(() => {
     priceRef.current = currentHigh;
@@ -68,19 +74,37 @@ export function useSimulatedBidding(opts: {
   useEffect(() => {
     if (!enabled) return;
 
+    // Use refs so cleanup can clear whatever timer is pending — including
+    // recursive reschedules — without being captured by a stale closure.
+    let mounted = true;
+    const bidTimerRef: { current: ReturnType<typeof setTimeout> | null } = {
+      current: null,
+    };
+    const flashTimerRef: { current: ReturnType<typeof setTimeout> | null } = {
+      current: null,
+    };
+
     function scheduleNextBid() {
+      if (!mounted) return;
       // Random interval: 4-12 seconds
       const delay = 4000 + Math.random() * 8000;
 
-      return setTimeout(() => {
-        const newAmount = +(
-          priceRef.current +
-          bidIncrement * (Math.random() > 0.7 ? 2 : 1)
-        ).toFixed(2);
+      bidTimerRef.current = setTimeout(() => {
+        if (!mounted) return;
 
-        // Don't exceed a reasonable max
+        // Advance price. If the delta would exceed maxPrice, step by a
+        // smaller amount so the loop never deadlocks — the point of the
+        // cap is to keep the demo number plausible, not to halt bidding.
+        let delta = bidIncrement * (Math.random() > 0.7 ? 2 : 1);
+        let newAmount = +(priceRef.current + delta).toFixed(2);
         if (maxPrice && newAmount > maxPrice) {
-          return;
+          delta = bidIncrement;
+          newAmount = +(priceRef.current + delta).toFixed(2);
+          if (newAmount > maxPrice) {
+            // Price has genuinely maxed out — keep nudging by the minimum
+            // increment so the demo keeps ticking without big jumps.
+            newAmount = +(priceRef.current + bidIncrement * 0.5).toFixed(2);
+          }
         }
 
         const { name, city } = randomBuyer();
@@ -89,12 +113,12 @@ export function useSimulatedBidding(opts: {
           lot_id: lotId,
           buyer_id: `sim-buyer-${Math.floor(Math.random() * 1000)}`,
           amount_per_kg: newAmount,
-          kg_requested: initialBids[0]?.kg_requested || 1,
+          kg_requested: initialKgRef.current,
           is_winning: true,
           status: "active",
           bid_source: "manual",
           placed_at: new Date().toISOString(),
-          buyer_display_name: `${name.split(" ")[0]} ${name.split(" ")[1]?.[0] || ""}.`,
+          buyer_display_name: buyerHandle(name),
           buyer_city: city,
           is_new: true,
         };
@@ -110,14 +134,23 @@ export function useSimulatedBidding(opts: {
         setCurrentHigh(newAmount);
         setLastBidTime(Date.now());
         setNewBidFlash(true);
-        setTimeout(() => setNewBidFlash(false), 800);
+
+        if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+        flashTimerRef.current = setTimeout(() => {
+          if (mounted) setNewBidFlash(false);
+        }, 800);
 
         scheduleNextBid();
       }, delay);
     }
 
-    const timeoutId = scheduleNextBid();
-    return () => clearTimeout(timeoutId);
+    scheduleNextBid();
+
+    return () => {
+      mounted = false;
+      if (bidTimerRef.current) clearTimeout(bidTimerRef.current);
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, lotId, bidIncrement, maxPrice]);
 

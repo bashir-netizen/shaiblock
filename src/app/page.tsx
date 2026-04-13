@@ -19,6 +19,10 @@ import {
   STORY_IMAGES,
   getLotHeroPhoto,
 } from "@/lib/photos";
+
+// Landing page shows 3 live featured lots; force per-request so countdowns
+// don't freeze at build time.
+export const dynamic = "force-dynamic";
 import { getCountryFlag, formatCountdown } from "@/lib/utils";
 import { StatsCounter } from "@/components/landing/stats-counter";
 import { ActivityTicker } from "@/components/landing/activity-ticker";

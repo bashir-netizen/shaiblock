@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ChevronUp, Eye, Users, Gavel, ShoppingCart, Zap } from "lucide-react";
-import type { Lot, Bid } from "@/lib/types";
-import { BID_INCREMENTS } from "@/lib/constants";
+import type { Lot } from "@/lib/types";
+import { BID_INCREMENTS, BUYER_PREMIUM_PCT } from "@/lib/constants";
 import { cn, formatPrice, formatCountdown, getCountdownColor } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/toast-system";
@@ -12,7 +12,6 @@ import { PriceDisplay } from "@/components/price-display";
 interface BidPanelProps {
   lot: Lot;
   initialHighBid: number;
-  initialBids?: Bid[];
   currentHigh: number;
   newBidFlash: boolean;
   bidCount: number;
@@ -28,15 +27,22 @@ export function BidPanel({
   const { showToast } = useToast();
   const [expanded, setExpanded] = useState(false);
   const [customBid, setCustomBid] = useState("");
-  const [, setTick] = useState(0);
+  // Compute countdown on the client only (post-hydration) to avoid
+  // server/client clock mismatch warnings.
+  const [countdown, setCountdown] = useState<string>("--:--");
+  const [countdownColor, setCountdownColor] = useState<string>("text-success");
   const prevHighRef = useRef<number>(initialHighBid);
   const mountedRef = useRef(false);
 
-  // 1s tick for countdown
   useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 1000);
+    const update = () => {
+      setCountdown(formatCountdown(lot.auction_end));
+      setCountdownColor(getCountdownColor(lot.auction_end));
+    };
+    update();
+    const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [lot.auction_end]);
 
   // Outbid toast whenever currentHigh changes (skip initial render)
   useEffect(() => {
@@ -54,9 +60,6 @@ export function BidPanel({
       prevHighRef.current = currentHigh;
     }
   }, [currentHigh, showToast]);
-
-  const countdown = formatCountdown(lot.auction_end);
-  const countdownColor = getCountdownColor(lot.auction_end);
 
   const handleBid = (amount: number) => {
     showToast({
@@ -233,13 +236,13 @@ export function BidPanel({
             )}
           </div>
 
-          {/* Quick bid pills */}
+          {/* Quick bid pills — min-h-11 hits the 44px iOS touch-target floor */}
           <div className="flex gap-2">
             {BID_INCREMENTS.map((inc) => (
               <button
                 key={inc}
                 onClick={() => handleBid(currentHigh + inc)}
-                className="flex-1 py-2.5 rounded-full bg-accent/10 hover:bg-accent hover:text-white text-accent border border-accent/30 text-sm font-bold transition-all duration-200"
+                className="flex-1 min-h-11 py-3 rounded-full bg-accent/10 hover:bg-accent hover:text-white text-accent border border-accent/30 text-sm font-bold transition-all duration-200"
               >
                 +{formatPrice(inc)}
               </button>
@@ -282,8 +285,7 @@ export function BidPanel({
           )}
 
           <p className="text-[10px] text-muted text-center">
-            A {((lot.bid_increment / currentHigh) * 100).toFixed(1)}% buyer premium
-            will apply at checkout
+            A {BUYER_PREMIUM_PCT}% buyer premium will apply at checkout
           </p>
         </div>
       </div>

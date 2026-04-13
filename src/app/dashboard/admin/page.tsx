@@ -24,11 +24,11 @@ const overviewCards = [
 ];
 
 const recentActivity = [
-  { id: 1, text: "Lot CB-2026-00142 went live", time: "3 min ago" },
-  { id: 2, text: "Buyer #3 won lot CB-2026-00130", time: "5 hours ago" },
-  { id: 3, text: "Counter-offer sent on lot CB-2026-00131", time: "10 min ago" },
-  { id: 4, text: "New seller registration: Uji Matcha Gardens", time: "1 day ago" },
-  { id: 5, text: "Order ORD-2026-00089 delivery confirmed", time: "1 day ago" },
+  { id: 1, text: "Lot SB-2026-00142 went live", time: "3 min ago" },
+  { id: 2, text: "Khartoum Shai House won lot SB-2026-00130", time: "5 hours ago" },
+  { id: 3, text: "Counter-offer sent on lot SB-2026-00131", time: "10 min ago" },
+  { id: 4, text: "Wholesaler KYC approved: Kassala Premium Tea", time: "1 day ago" },
+  { id: 5, text: "Order ORD-2026-00089 delivery confirmed in Omdurman", time: "1 day ago" },
 ];
 
 export default function AdminDashboard() {

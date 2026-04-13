@@ -11,14 +11,18 @@ import { CountdownTimer } from "@/components/countdown-timer";
 import { PriceDisplay } from "@/components/price-display";
 
 export function AuctionCard({ lot }: { lot: Lot }) {
-  // Re-render every second so the "urgent" state updates live
-  const [, setTick] = useState(0);
+  // Only compute the "urgent" flag on the client, post-hydration. If we
+  // evaluated getTimeRemaining in the render body, server and client would
+  // differ by ~milliseconds and React would log a hydration mismatch.
+  const [urgent, setUrgent] = useState(false);
   useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 1000);
+    const update = () => {
+      setUrgent(getTimeRemaining(lot.auction_end).total < 5 * 60 * 1000);
+    };
+    update();
+    const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, []);
-
-  const urgent = getTimeRemaining(lot.auction_end).total < 5 * 60 * 1000;
+  }, [lot.auction_end]);
 
   return (
     <Link href={`/auctions/${lot.id}`} className="group">

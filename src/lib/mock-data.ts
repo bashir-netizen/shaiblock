@@ -79,7 +79,7 @@ export const sellers: Profile[] = [
     role: "seller",
     company_name: "Blue Nile Tea House",
     display_name: "Blue Nile Tea House",
-    email: "trade@bluenilshay.sd",
+    email: "trade@bluenile-tea.sd",
     phone: "+249945678901",
     country: "SD",
     city: "Wad Madani",
@@ -178,7 +178,7 @@ export const lots: Lot[] = [
   {
     id: "lot1",
     seller_id: "s1",
-    lot_number: "CB-2026-00142",
+    lot_number: "SB-2026-00142",
     title: "Kericho Gold GFBOP - March 2026",
     description:
       "Premium golden tips from the Kipkelion estate at 2,100m elevation. Bright amber liquor with muscatel character and a smooth finish.",
@@ -238,7 +238,7 @@ export const lots: Lot[] = [
   {
     id: "lot2",
     seller_id: "s2",
-    lot_number: "CB-2026-00143",
+    lot_number: "SB-2026-00143",
     title: "Darjeeling FTGFOP1 - First Flush 2026",
     description:
       "Classic Darjeeling first flush from the Makaibari estate. Light, floral, with distinctive muscatel grape notes.",
@@ -263,8 +263,8 @@ export const lots: Lot[] = [
     },
     cupping_notes:
       "Exquisite muscatel grape character with floral high notes. Light copper liquor. Remarkably clean aftertaste.",
-    cupped_by: "Rajesh Sharma",
-    cupping_date: "2026-03-12",
+    cupped_by: "Khalid Abdallah (Khartoum re-cupping)",
+    cupping_date: "2026-03-20",
     photo_dry_leaf: "/placeholder-tea-dry.jpg",
     photo_wet_leaf: "/placeholder-tea-wet.jpg",
     photo_liquor: "/placeholder-tea-liquor.jpg",
@@ -298,7 +298,7 @@ export const lots: Lot[] = [
   {
     id: "lot3",
     seller_id: "s3",
-    lot_number: "CB-2026-00144",
+    lot_number: "SB-2026-00144",
     title: "Ceylon Silver Tips - Premium White",
     description:
       "Ultra-premium silver tips from Nuwara Eliya's highest elevation gardens. Subtle, sweet, and extraordinarily smooth.",
@@ -358,7 +358,7 @@ export const lots: Lot[] = [
   {
     id: "lot4",
     seller_id: "s4",
-    lot_number: "CB-2026-00145",
+    lot_number: "SB-2026-00145",
     title: "Yunnan Ancient Pu-erh Cake 2020",
     description:
       "Six-year aged raw pu-erh from 300-year-old tea trees in Yunnan's Bulang Mountain region.",
@@ -416,7 +416,7 @@ export const lots: Lot[] = [
   {
     id: "lot5",
     seller_id: "s5",
-    lot_number: "CB-2026-00146",
+    lot_number: "SB-2026-00146",
     title: "Uji Ceremonial Matcha - Spring 2026",
     description:
       "Shade-grown tencha from Uji, stone-ground to a superfine powder. Vibrant green with intense umami.",
@@ -476,7 +476,7 @@ export const lots: Lot[] = [
   {
     id: "lot6",
     seller_id: "s1",
-    lot_number: "CB-2026-00147",
+    lot_number: "SB-2026-00147",
     title: "Kenya CTC PF1 - Bulk Grade",
     description:
       "Strong, brisk CTC tea ideal for blending. Consistent quality from the Kipkelion factory.",
@@ -501,8 +501,8 @@ export const lots: Lot[] = [
     },
     cupping_notes:
       "Strong, full-bodied CTC with excellent colour. Very brisk with good strength. Ideal for milk tea blends.",
-    cupped_by: "James Mwangi",
-    cupping_date: "2026-03-08",
+    cupped_by: "Hassan Babikir (Port Sudan re-cupping)",
+    cupping_date: "2026-03-18",
     photo_dry_leaf: "/placeholder-tea-dry.jpg",
     photo_wet_leaf: "/placeholder-tea-wet.jpg",
     photo_liquor: "/placeholder-tea-liquor.jpg",
@@ -534,7 +534,7 @@ export const lots: Lot[] = [
   {
     id: "lot7",
     seller_id: "s3",
-    lot_number: "CB-2026-00148",
+    lot_number: "SB-2026-00148",
     title: "Ceylon OP1 - Dimbula Valley",
     description:
       "Classic Ceylon black tea from the Dimbula valley. Rich and full-flavored with bright coppery liquor.",
@@ -594,7 +594,7 @@ export const lots: Lot[] = [
   {
     id: "lot8",
     seller_id: "s4",
-    lot_number: "CB-2026-00149",
+    lot_number: "SB-2026-00149",
     title: "Tie Guan Yin - Premium Oolong",
     description:
       "High-quality Tie Guan Yin from Anxi, Fujian. Light roast with complex floral and creamy notes.",
@@ -655,7 +655,7 @@ export const lots: Lot[] = [
   {
     id: "lot9",
     seller_id: "s1",
-    lot_number: "CB-2026-00130",
+    lot_number: "SB-2026-00130",
     title: "Kericho BOP1 - February 2026",
     origin_country: "KE",
     origin_region: "Kericho",
@@ -707,7 +707,7 @@ export const lots: Lot[] = [
   {
     id: "lot10",
     seller_id: "s2",
-    lot_number: "CB-2026-00131",
+    lot_number: "SB-2026-00131",
     title: "Assam TGFOP - Second Flush 2025",
     origin_country: "IN",
     origin_region: "Assam",
@@ -1023,10 +1023,50 @@ export const mockUsers: Record<string, MockUser> = {
 };
 
 // ============================================================
+// Live-timestamp refresh for active lots
+// ----------------------------------------------------------------
+// The `lots` array above captures timestamps at MODULE LOAD time.
+// That's wrong for a long-running demo: by the time the investor
+// opens the tunnel URL, the server might have been running for
+// an hour and every auction would show ENDED.
+//
+// Fix: store each active lot's auction window as offsets from "now"
+// and recompute the ISO strings on every `getActiveLots()` /
+// `getLotById()` call. This way the countdown is always live.
+// ============================================================
+const ACTIVE_LOT_TIMING: Record<
+  string,
+  { startOffsetMin: number; durationMin: number }
+> = {
+  lot1: { startOffsetMin: -22, durationMin: 45 },
+  lot2: { startOffsetMin: -30, durationMin: 45 },
+  lot3: { startOffsetMin: -15, durationMin: 60 },
+  lot4: { startOffsetMin: -40, durationMin: 45 },
+  lot5: { startOffsetMin: -5, durationMin: 30 },
+  lot6: { startOffsetMin: -10, durationMin: 45 },
+  lot7: { startOffsetMin: -35, durationMin: 45 },
+  lot8: { startOffsetMin: -20, durationMin: 45 },
+};
+
+function refreshLotTimestamps(lot: Lot): Lot {
+  const timing = ACTIVE_LOT_TIMING[lot.id];
+  if (!timing) return lot;
+  const now = Date.now();
+  const start = new Date(now + timing.startOffsetMin * 60 * 1000);
+  const end = new Date(start.getTime() + timing.durationMin * 60 * 1000);
+  return {
+    ...lot,
+    auction_start: start.toISOString(),
+    auction_end: end.toISOString(),
+  };
+}
+
+// ============================================================
 // HELPERS for looking up data
 // ============================================================
 export function getLotById(id: string): Lot | undefined {
-  return lots.find((l) => l.id === id);
+  const lot = lots.find((l) => l.id === id);
+  return lot ? refreshLotTimestamps(lot) : undefined;
 }
 
 export function getBidsForLot(lotId: string): Bid[] {
@@ -1039,7 +1079,7 @@ export function getBidsForLot(lotId: string): Bid[] {
 }
 
 export function getActiveLots(): Lot[] {
-  return lots.filter((l) => l.status === "active");
+  return lots.filter((l) => l.status === "active").map(refreshLotTimestamps);
 }
 
 export function getProfileById(id: string): Profile | undefined {

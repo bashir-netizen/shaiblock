@@ -7,6 +7,14 @@ interface SellerCardProps {
   seller: Profile;
 }
 
+// Derive a plausible TCR accuracy % from the seller's reputation_score (0-5).
+// A 5.0 seller lands around 99%, a 4.0 around 90%. Keeps the display honest
+// to the underlying data instead of hard-coding "96%".
+function tcrAccuracyFromReputation(score: number): number {
+  if (score <= 0) return 0;
+  return Math.min(99, Math.round(80 + score * 4));
+}
+
 export function SellerCard({ seller }: SellerCardProps) {
   const initials = (seller.company_name || seller.display_name)
     .split(" ")
@@ -14,6 +22,7 @@ export function SellerCard({ seller }: SellerCardProps) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+  const tcrAccuracy = tcrAccuracyFromReputation(seller.reputation_score);
 
   return (
     <Link
@@ -39,7 +48,7 @@ export function SellerCard({ seller }: SellerCardProps) {
         </div>
 
         <div className="flex items-center gap-2 text-sm text-muted mt-0.5">
-          <span className="text-xs">TCR Accuracy: 96%</span>
+          <span className="text-xs">TCR Accuracy: {tcrAccuracy}%</span>
           {seller.country && (
             <>
               <span className="text-border">|</span>

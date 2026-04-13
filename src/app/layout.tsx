@@ -23,7 +23,7 @@ const notoArabic = Noto_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "ShaiBlock \u2014 Sudan's Live Tea Auction",
+  title: "ShaiBlock — Sudan's Live Tea Auction",
   description:
     "Sudan's first live tea auction. Retailers from Khartoum, Omdurman, and Port Sudan bid on verified tea lots from Kenya, India, Sri Lanka, and beyond. Transparent pricing. Verified quality. Instant settlement.",
 };

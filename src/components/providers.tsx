@@ -4,16 +4,15 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import { mockUsers, type MockUser } from "@/lib/mock-data";
 
 interface AuthContextValue {
-  user: MockUser | null;
+  user: MockUser;
   setRole: (role: "buyer" | "seller" | "admin") => void;
   isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextValue>({
-  user: null,
-  setRole: () => {},
-  isAuthenticated: false,
-});
+// Null default so `useAuth` outside a provider throws rather than returning
+// a silently-broken stub. The type is non-null inside the provider since
+// we always seed with a mock user.
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<MockUser>(mockUsers.buyer);
@@ -23,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, setRole, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, setRole, isAuthenticated: true }}>
       {children}
     </AuthContext.Provider>
   );

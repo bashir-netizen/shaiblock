@@ -373,7 +373,7 @@ export function AuctionFeedClient({ initialLots }: AuctionFeedClientProps) {
               key={chip.key}
               onClick={() => handleChipClick(chip.key)}
               className={cn(
-                "whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all shrink-0",
+                "whitespace-nowrap min-h-10 px-4 py-2.5 rounded-full text-sm font-medium transition-all shrink-0",
                 activeChip === chip.key
                   ? "bg-primary text-white border border-primary shadow-md"
                   : "bg-card border border-border text-foreground hover:border-primary hover:shadow-sm"

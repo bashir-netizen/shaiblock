@@ -18,14 +18,12 @@ export function TopNav() {
   const pathname = usePathname();
   const { user, setRole } = useAuth();
 
-  const initials = user?.display_name
-    ? user.display_name
-        .split(" ")
-        .map((w) => w[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "??";
+  const initials = user.display_name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <header className="sticky top-0 z-50 hidden h-16 border-b border-border bg-card md:flex">
@@ -67,18 +65,43 @@ export function TopNav() {
 
         {/* Right section */}
         <div className="flex items-center gap-4">
-          {/* Role switcher */}
-          <select
-            value={user?.role ?? "buyer"}
-            onChange={(e) =>
-              setRole(e.target.value as "buyer" | "seller" | "admin")
-            }
-            className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          {/* Demo-mode role preview: segmented button group so the investor
+              can switch between retailer / wholesaler / admin views. Styled
+              to look like an intentional "demo preview" control, not a dev
+              toggle. */}
+          <div
+            className="hidden lg:inline-flex items-center gap-0.5 rounded-full border border-border bg-background px-1 py-1"
+            role="group"
+            aria-label="Preview as"
           >
-            <option value="buyer">Buyer</option>
-            <option value="seller">Seller</option>
-            <option value="admin">Admin</option>
-          </select>
+            <span className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted">
+              View as
+            </span>
+            {(["buyer", "seller", "admin"] as const).map((role) => {
+              const active = user.role === role;
+              const label =
+                role === "buyer"
+                  ? "Retailer"
+                  : role === "seller"
+                    ? "Wholesaler"
+                    : "Admin";
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setRole(role)}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-[11px] font-semibold transition-colors",
+                    active
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-muted hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
 
           {/* Notifications */}
           <Link href="/notifications" className="relative">

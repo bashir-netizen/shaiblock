@@ -18,6 +18,11 @@ const UNREAD_COUNT = 2;
 export function BottomNav() {
   const pathname = usePathname();
 
+  // On lot detail pages the sticky BidPanel needs full bottom real estate
+  // (fixed BottomNav would occlude the tap-to-bid area). Hide the nav there.
+  const isLotDetail = /^\/auctions\/[^/]+$/.test(pathname);
+  if (isLotDetail) return null;
+
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 h-16 bg-card border-t border-border md:hidden">
       <div className="flex h-full items-center justify-around">

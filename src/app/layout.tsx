@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, Noto_Sans_Arabic } from "next/font/google";
+import { Inter, Fraunces, Amiri, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/providers";
 import { ToastProvider } from "@/components/toast-system";
 import { TopNav } from "@/components/top-nav";
@@ -9,17 +9,29 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
 });
 
-const notoArabic = Noto_Sans_Arabic({
-  variable: "--font-arabic",
+const amiri = Amiri({
+  variable: "--font-amiri",
   subsets: ["arabic"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "700"],
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -36,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfair.variable} ${notoArabic.variable} h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} ${amiri.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <body className="bg-background text-foreground font-sans min-h-screen">
         <AuthProvider>

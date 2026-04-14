@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { useAuth } from "@/components/providers";
+import { Wordmark } from "@/components/brand/wordmark";
+import { Chip } from "@/components/ui/chip";
+import { Stamp } from "@/components/ui/stamp";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -17,6 +21,15 @@ const UNREAD_COUNT = 2;
 export function TopNav() {
   const pathname = usePathname();
   const { user, setRole } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Collapse on scroll past 120px for a calmer reading experience
+  useEffect(() => {
+    const handler = () => setCollapsed(window.scrollY > 120);
+    handler();
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
 
   const initials = user.display_name
     .split(" ")
@@ -26,89 +39,83 @@ export function TopNav() {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-50 hidden h-16 border-b border-border bg-card md:flex">
+    <header
+      className={cn(
+        "sticky top-0 z-50 hidden border-b border-border bg-card backdrop-blur-sm transition-[height] duration-300 md:flex",
+        collapsed ? "h-12" : "h-16"
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-baseline gap-1.5">
-          <span className="font-serif text-xl font-bold text-primary">
-            ShaiBlock
-          </span>
-          <span
-            className="font-arabic text-accent text-lg font-bold"
-            dir="rtl"
-            lang="ar"
-          >
-            شاي
-          </span>
+        {/* Brand lockup */}
+        <Link href="/" className="flex items-center">
+          <Wordmark variant={collapsed ? "mark-only" : "horizontal"} size="md" />
+          {collapsed && (
+            <span className="ml-2 relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-[var(--color-live)] opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-live)]" />
+            </span>
+          )}
         </Link>
 
-        {/* Center nav */}
-        <nav className="flex items-center gap-6">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname === link.href ||
-                  (link.href.startsWith("/auctions") &&
-                    pathname === "/auctions" &&
-                    link.href === "/auctions")
-                  ? "text-primary"
-                  : "text-muted"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Center nav (hidden when collapsed) */}
+        {!collapsed && (
+          <nav className="flex items-center gap-6">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "type-meta transition-colors hover:text-primary",
+                  pathname === link.href ? "text-primary" : "text-[var(--color-ink-muted)]"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         {/* Right section */}
-        <div className="flex items-center gap-4">
-          {/* Demo-mode role preview: segmented button group so the investor
-              can switch between retailer / wholesaler / admin views. Styled
-              to look like an intentional "demo preview" control, not a dev
-              toggle. */}
-          <div
-            className="hidden lg:inline-flex items-center gap-0.5 rounded-full border border-border bg-background px-1 py-1"
-            role="group"
-            aria-label="Preview as"
-          >
-            <span className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted">
-              View as
-            </span>
-            {(["buyer", "seller", "admin"] as const).map((role) => {
-              const active = user.role === role;
-              const label =
-                role === "buyer"
-                  ? "Retailer"
-                  : role === "seller"
-                    ? "Wholesaler"
-                    : "Admin";
-              return (
-                <button
-                  key={role}
-                  type="button"
-                  onClick={() => setRole(role)}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-[11px] font-semibold transition-colors",
-                    active
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-muted hover:text-foreground"
-                  )}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex items-center gap-3">
+          {/* Role preview — tea-type chip row */}
+          {!collapsed && (
+            <div
+              className="hidden lg:inline-flex items-center gap-1 rounded-full border border-border bg-background px-1.5 py-1"
+              role="group"
+              aria-label="Preview as"
+            >
+              <span className="px-2 type-micro text-[var(--color-ink-muted)]">View as</span>
+              {(["buyer", "seller", "admin"] as const).map((role) => {
+                const active = user.role === role;
+                const label =
+                  role === "buyer"
+                    ? "Retailer"
+                    : role === "seller"
+                      ? "Wholesaler"
+                      : "Admin";
+                return (
+                  <Chip
+                    key={role}
+                    variant={active ? "wax" : "neutral"}
+                    size="sm"
+                    onClick={() => setRole(role)}
+                    className="cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                  >
+                    {label}
+                  </Chip>
+                );
+              })}
+            </div>
+          )}
 
           {/* Notifications */}
-          <Link href="/notifications" className="relative">
-            <Bell className="h-5 w-5 text-muted hover:text-foreground transition-colors" />
+          <Link href="/notifications" className="relative p-1" aria-label={`Notifications (${UNREAD_COUNT} unread)`}>
+            <Bell className="h-5 w-5 text-[var(--color-ink-muted)] hover:text-foreground transition-colors" />
             {UNREAD_COUNT > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">
-                {UNREAD_COUNT}
+              <span className="absolute -top-0.5 -right-0.5">
+                <Stamp label={String(UNREAD_COUNT)} color="wax" size="xs" />
               </span>
             )}
           </Link>

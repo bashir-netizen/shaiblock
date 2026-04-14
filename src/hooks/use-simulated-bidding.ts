@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Bid } from "@/lib/types";
 import { DEMO_BUYER_NAMES, DEMO_BUYER_CITIES } from "@/lib/photos";
+
+// Sim bidders pause for this long after the investor places a bid,
+// so the user gets a moment of "I'm winning" before competition resumes.
+const INVESTOR_BID_PAUSE_MS = 10_000;
 
 // ============================================================
 // useSimulatedBidding — the core investor-demo magic
@@ -14,6 +18,7 @@ export interface SimulatedBid extends Bid {
   buyer_display_name: string;
   buyer_city: string;
   is_new?: boolean;
+  is_investor?: boolean;
 }
 
 function randomBuyer() {
@@ -66,6 +71,11 @@ export function useSimulatedBidding(opts: {
   const [newBidFlash, setNewBidFlash] = useState(false);
   const priceRef = useRef(currentHigh);
   const initialKgRef = useRef(initialBids[0]?.kg_requested || 1);
+  // Timestamp of the investor's most recent bid. Sim bidders check this
+  // ref and skip ticks if we're still inside the pause window.
+  const investorJustBidAtRef = useRef<number | null>(null);
+  // Shared flash-off timer so placeInvestorBid and sim ticks don't fight.
+  const flashOffTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     priceRef.current = currentHigh;
@@ -91,6 +101,18 @@ export function useSimulatedBidding(opts: {
 
       bidTimerRef.current = setTimeout(() => {
         if (!mounted) return;
+
+        // Investor-aware pause — if the user just placed a bid, skip this
+        // tick and retry after the remaining pause window.
+        if (investorJustBidAtRef.current !== null) {
+          const elapsed = Date.now() - investorJustBidAtRef.current;
+          if (elapsed < INVESTOR_BID_PAUSE_MS) {
+            const remaining = INVESTOR_BID_PAUSE_MS - elapsed;
+            bidTimerRef.current = setTimeout(scheduleNextBid, remaining);
+            return;
+          }
+          investorJustBidAtRef.current = null;
+        }
 
         // Advance price. If the delta would exceed maxPrice, step by a
         // smaller amount so the loop never deadlocks — the point of the
@@ -154,12 +176,55 @@ export function useSimulatedBidding(opts: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, lotId, bidIncrement, maxPrice]);
 
+  // ============================================================
+  // placeInvestorBid — the callback the BidPanel fires when the
+  // user taps a quick-bid pill or "Place Bid". This is what makes
+  // bidding ACTUALLY work (prior version was toast-only).
+  // ============================================================
+  const placeInvestorBid = useCallback(
+    (amount: number, kgRequested?: number) => {
+      const kg = kgRequested ?? initialKgRef.current;
+      const investorBid: SimulatedBid = {
+        id: `investor-${Date.now()}-${Math.random()}`,
+        lot_id: lotId,
+        buyer_id: "investor",
+        amount_per_kg: amount,
+        kg_requested: kg,
+        is_winning: true,
+        status: "active",
+        bid_source: "manual",
+        placed_at: new Date().toISOString(),
+        buyer_display_name: "You",
+        buyer_city: "—",
+        is_investor: true,
+        is_new: true,
+      };
+      setBids((prev) => {
+        const outbid = prev.map((b) => ({
+          ...b,
+          is_winning: false,
+          status: "outbid" as const,
+        }));
+        return [investorBid, ...outbid];
+      });
+      setCurrentHigh(amount);
+      setLastBidTime(Date.now());
+      setNewBidFlash(true);
+      // Pause sim bidders for 10 seconds so the investor feels like the leader
+      investorJustBidAtRef.current = Date.now();
+      if (flashOffTimerRef.current) clearTimeout(flashOffTimerRef.current);
+      flashOffTimerRef.current = setTimeout(() => setNewBidFlash(false), 800);
+    },
+    [lotId]
+  );
+
   return {
     bids,
     currentHigh,
     lastBidTime,
     newBidFlash,
     bidCount: bids.length,
+    placeInvestorBid,
   };
 }
 

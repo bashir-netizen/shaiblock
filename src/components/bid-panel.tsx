@@ -15,6 +15,12 @@ interface BidPanelProps {
   currentHigh: number;
   newBidFlash: boolean;
   bidCount: number;
+  /**
+   * Callback invoked when the user places a bid via quick-bid pill or
+   * custom-bid button. Wired into useSimulatedBidding.placeInvestorBid
+   * in the parent. If omitted, bidding is toast-only (demo preview mode).
+   */
+  onPlaceInvestorBid?: (amount: number, kgRequested?: number) => void;
 }
 
 export function BidPanel({
@@ -23,6 +29,7 @@ export function BidPanel({
   currentHigh,
   newBidFlash,
   bidCount,
+  onPlaceInvestorBid,
 }: BidPanelProps) {
   const { showToast } = useToast();
   const [expanded, setExpanded] = useState(false);
@@ -33,6 +40,10 @@ export function BidPanel({
   const [countdownColor, setCountdownColor] = useState<string>("text-success");
   const prevHighRef = useRef<number>(initialHighBid);
   const mountedRef = useRef(false);
+  // Tracks the amount of the most recent investor bid so the outbid-toast
+  // effect can skip firing when currentHigh changes due to the investor's
+  // own bid rather than a simulated outbid.
+  const lastInvestorBidRef = useRef<number | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -52,20 +63,31 @@ export function BidPanel({
       return;
     }
     if (currentHigh !== prevHighRef.current) {
-      showToast({
-        type: "outbid",
-        title: "You've been outbid!",
-        body: `New high bid: ${formatPrice(currentHigh)}/kg`,
-      });
+      // Skip the outbid toast if this change came from the investor's own
+      // bid — they're not being outbid, they ARE the new high bidder.
+      if (lastInvestorBidRef.current === currentHigh) {
+        lastInvestorBidRef.current = null;
+      } else {
+        showToast({
+          type: "outbid",
+          title: "You've been outbid!",
+          body: `New high bid: ${formatPrice(currentHigh)}/kg`,
+        });
+      }
       prevHighRef.current = currentHigh;
     }
   }, [currentHigh, showToast]);
 
   const handleBid = (amount: number) => {
+    // Record this amount so the outbid effect knows to skip the next
+    // currentHigh change (it'll be this one).
+    lastInvestorBidRef.current = amount;
+    // Actually place the bid via the parent's useSimulatedBidding callback.
+    onPlaceInvestorBid?.(amount);
     showToast({
       type: "success",
       title: "Bid placed!",
-      body: `${formatPrice(amount)}/kg — your bid is now active`,
+      body: `${formatPrice(amount)}/kg — you're the high bidder`,
     });
   };
 

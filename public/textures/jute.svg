@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <defs>
+    <pattern id="jute-weave" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#D9C7A1" />
+      <path d="M0 4 L 8 4" stroke="#B39E6E" stroke-width="0.6" opacity="0.5" />
+      <path d="M4 0 L 4 8" stroke="#B39E6E" stroke-width="0.6" opacity="0.5" />
+    </pattern>
+  </defs>
+  <rect width="32" height="32" fill="url(#jute-weave)" />
+</svg>

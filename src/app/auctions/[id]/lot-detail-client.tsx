@@ -56,6 +56,7 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
     currentHigh,
     newBidFlash,
     bidCount,
+    investorIsHighest,
     placeInvestorBid,
   } = useSimulatedBidding({
     lotId: lot.id,
@@ -370,6 +371,7 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
               currentHigh={currentHigh}
               newBidFlash={newBidFlash}
               bidCount={bidCount}
+              investorIsHighest={investorIsHighest}
               onPlaceInvestorBid={placeInvestorBid}
             />
             <BidHistory bids={liveBids} max={8} />
@@ -385,6 +387,7 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
           currentHigh={currentHigh}
           newBidFlash={newBidFlash}
           bidCount={bidCount}
+          investorIsHighest={investorIsHighest}
           onPlaceInvestorBid={placeInvestorBid}
         />
       </div>

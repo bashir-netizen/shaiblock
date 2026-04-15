@@ -6,7 +6,7 @@ import { DEMO_BUYER_NAMES, DEMO_BUYER_CITIES } from "@/lib/photos";
 
 // Sim bidders pause for this long after the investor places a bid,
 // so the user gets a moment of "I'm winning" before competition resumes.
-const INVESTOR_BID_PAUSE_MS = 10_000;
+const INVESTOR_BID_PAUSE_MS = 5_000;
 
 // ============================================================
 // useSimulatedBidding — the core investor-demo magic
@@ -218,12 +218,18 @@ export function useSimulatedBidding(opts: {
     [lotId]
   );
 
+  // Derived flag: is the current high bid the investor's? Used by BidPanel
+  // to suppress the outbid toast when currentHigh changes due to the
+  // user's own bid rather than a simulated outbid.
+  const investorIsHighest = bids[0]?.is_investor === true;
+
   return {
     bids,
     currentHigh,
     lastBidTime,
     newBidFlash,
     bidCount: bids.length,
+    investorIsHighest,
     placeInvestorBid,
   };
 }

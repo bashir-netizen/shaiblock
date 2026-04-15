@@ -15,6 +15,9 @@ interface BidPanelProps {
   currentHigh: number;
   newBidFlash: boolean;
   bidCount: number;
+  /** True when the investor's own bid is the current high. Used to
+   *  suppress the outbid toast when the user just bid themselves. */
+  investorIsHighest?: boolean;
   /**
    * Callback invoked when the user places a bid via quick-bid pill or
    * custom-bid button. Wired into useSimulatedBidding.placeInvestorBid
@@ -29,6 +32,7 @@ export function BidPanel({
   currentHigh,
   newBidFlash,
   bidCount,
+  investorIsHighest,
   onPlaceInvestorBid,
 }: BidPanelProps) {
   const { showToast } = useToast();
@@ -40,10 +44,6 @@ export function BidPanel({
   const [countdownColor, setCountdownColor] = useState<string>("text-success");
   const prevHighRef = useRef<number>(initialHighBid);
   const mountedRef = useRef(false);
-  // Tracks the amount of the most recent investor bid so the outbid-toast
-  // effect can skip firing when currentHigh changes due to the investor's
-  // own bid rather than a simulated outbid.
-  const lastInvestorBidRef = useRef<number | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -55,7 +55,10 @@ export function BidPanel({
     return () => clearInterval(interval);
   }, [lot.auction_end]);
 
-  // Outbid toast whenever currentHigh changes (skip initial render)
+  // Outbid toast whenever currentHigh changes (skip initial render).
+  // Suppressed when the investor's own bid is the current high — they're
+  // not being outbid, they ARE the new high bidder. Driven by the parent's
+  // bids[0].is_investor flag, which is deterministic per re-render.
   useEffect(() => {
     if (!mountedRef.current) {
       mountedRef.current = true;
@@ -63,11 +66,7 @@ export function BidPanel({
       return;
     }
     if (currentHigh !== prevHighRef.current) {
-      // Skip the outbid toast if this change came from the investor's own
-      // bid — they're not being outbid, they ARE the new high bidder.
-      if (lastInvestorBidRef.current === currentHigh) {
-        lastInvestorBidRef.current = null;
-      } else {
+      if (!investorIsHighest) {
         showToast({
           type: "outbid",
           title: "You've been outbid!",
@@ -76,12 +75,9 @@ export function BidPanel({
       }
       prevHighRef.current = currentHigh;
     }
-  }, [currentHigh, showToast]);
+  }, [currentHigh, investorIsHighest, showToast]);
 
   const handleBid = (amount: number) => {
-    // Record this amount so the outbid effect knows to skip the next
-    // currentHigh change (it'll be this one).
-    lastInvestorBidRef.current = amount;
     // Actually place the bid via the parent's useSimulatedBidding callback.
     onPlaceInvestorBid?.(amount);
     showToast({

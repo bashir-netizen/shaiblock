@@ -34,6 +34,14 @@ function buyerHandle(fullName: string): string {
   return `${first} ${last?.[0] ?? ""}.`;
 }
 
+export type AuctionPhase =
+  | "live"
+  | "main_ended"
+  | "pending_review"
+  | "closing_round"
+  | "hammered"
+  | "sold";
+
 export function useSimulatedBidding(opts: {
   lotId: string;
   startingPrice: number;
@@ -41,6 +49,8 @@ export function useSimulatedBidding(opts: {
   maxPrice?: number;
   initialBids: Bid[];
   enabled?: boolean;
+  /** Phase from useAuctionClock. Sim bidders only fire during 'live'. */
+  phase?: AuctionPhase;
 }) {
   const {
     lotId,
@@ -49,6 +59,7 @@ export function useSimulatedBidding(opts: {
     maxPrice,
     initialBids,
     enabled = true,
+    phase = "live",
   } = opts;
 
   // Build initial simulated bids from the seed data
@@ -83,6 +94,11 @@ export function useSimulatedBidding(opts: {
 
   useEffect(() => {
     if (!enabled) return;
+    // Sim bidders only run during the 'live' phase. When phase transitions
+    // to main_ended / pending_review / closing_round / hammered / sold,
+    // we want all activity to STOP so useAuctionClock can drive the
+    // closing-round opponent AI without sim interference.
+    if (phase !== "live") return;
 
     // Use refs so cleanup can clear whatever timer is pending — including
     // recursive reschedules — without being captured by a stale closure.
@@ -174,7 +190,7 @@ export function useSimulatedBidding(opts: {
       if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, lotId, bidIncrement, maxPrice]);
+  }, [enabled, lotId, bidIncrement, maxPrice, phase]);
 
   // ============================================================
   // placeInvestorBid — the callback the BidPanel fires when the

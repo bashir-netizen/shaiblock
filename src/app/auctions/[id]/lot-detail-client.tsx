@@ -28,6 +28,11 @@ import { BidHistory } from "@/components/bid-history";
 import { SellerCard } from "@/components/seller-card";
 import { getLotTCRPhotos } from "@/lib/photos";
 import { useSimulatedBidding } from "@/hooks/use-simulated-bidding";
+import { useAuctionClock, computeTopTwo } from "@/hooks/use-auction-clock";
+import { MainEndedOverlay } from "@/components/main-ended-overlay";
+import { PendingReviewSheet } from "@/components/pending-review-sheet";
+import { ClosingRoundSheet } from "@/components/closing-round-sheet";
+import { HammeredStamp } from "@/components/hammered-stamp";
 
 const PHOTO_SLOTS = [
   { key: "dry" as const, label: "Dry Leaf" },
@@ -50,7 +55,12 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
   );
   const initialHighBid = lot.current_high_bid || lot.starting_price_per_kg;
 
-  // Live bid simulation — single source of truth
+  // Phase state machine — drives the closing round flow
+  const clock = useAuctionClock({ lot });
+
+  // Live bid simulation — single source of truth. Sim bidders STOP when
+  // clock.phase leaves 'live' so useAuctionClock's opponent AI takes over
+  // for the closing round.
   const {
     bids: liveBids,
     currentHigh,
@@ -67,7 +77,17 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
       : initialHighBid * 3,
     initialBids: bids,
     enabled: true,
+    phase: clock.phase,
   });
+
+  // When main auction ends, snapshot the top two bidders so the
+  // closing round knows who's fighting. Spec §3.3 data flow pattern.
+  useEffect(() => {
+    if (clock.phase === "main_ended" && !clock.topTwo) {
+      clock.setTopTwo(computeTopTwo(liveBids, lot));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clock.phase]);
 
   // Photo carousel
   const photos = getLotTCRPhotos(lot.id);
@@ -93,6 +113,36 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
 
   return (
     <div className="pb-40 md:pb-12 bg-background">
+      {/* ── Live auction engine phase overlays ── */}
+      {clock.phase === "main_ended" && <MainEndedOverlay />}
+      {clock.phase === "pending_review" && (
+        <PendingReviewSheet
+          seller={seller}
+          highestBidUSD={clock.topTwo?.[0]?.amount_per_kg ?? currentHigh}
+          reserveUSD={lot.reserve_price_per_kg}
+        />
+      )}
+      {clock.phase === "closing_round" && clock.topTwo && (
+        <ClosingRoundSheet
+          lot={lot}
+          topTwo={clock.topTwo}
+          closingRoundBids={clock.closingRoundBids}
+          msRemaining={clock.msRemaining}
+          extendedCount={clock.extendedCount}
+          onPlaceBid={clock.placeClosingRoundBid}
+          onConcede={clock.concede}
+        />
+      )}
+      {clock.phase === "hammered" && clock.winner && (
+        <HammeredStamp
+          winnerName={clock.winner.buyer_display_name}
+          winnerCity={clock.winner.buyer_city}
+          pricePerKgUSD={clock.winner.amount_per_kg}
+          totalKg={lot.total_kg}
+          isInvestor={clock.winner.is_investor === true}
+        />
+      )}
+
       {/* Top bar */}
       <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border/60">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">

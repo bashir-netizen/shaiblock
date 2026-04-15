@@ -112,7 +112,7 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
   const cuppedByLabel = lot.cupped_by || seller.company_name || seller.display_name;
 
   return (
-    <div className="pb-40 md:pb-12 bg-background">
+    <div className="pb-[320px] md:pb-12 bg-background">
       {/* ── Live auction engine phase overlays ── */}
       {clock.phase === "main_ended" && <MainEndedOverlay />}
       {clock.phase === "pending_review" && (
@@ -144,7 +144,7 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
       )}
 
       {/* Top bar */}
-      <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border/60">
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/60">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link
             href="/auctions"
@@ -167,6 +167,54 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
         </div>
       </div>
 
+      {/* MOBILE-ONLY sticky lot summary card — pinned below the top bar so
+          the investor always knows what they're bidding on while scrolling
+          through the TCR and while the bottom bid panel is active. */}
+      <div className="md:hidden sticky top-[58px] z-20 bg-card border-b border-border shadow-sm">
+        <div className="flex items-center gap-3 p-3">
+          <div className="relative w-[72px] h-[72px] rounded-lg overflow-hidden shrink-0 bg-stone-100">
+            <Image
+              src={photos.dry}
+              alt={lot.title}
+              fill
+              sizes="72px"
+              className="object-cover"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-serif text-base font-bold text-foreground leading-tight line-clamp-2">
+              {lot.title}
+            </h1>
+            <div className="flex items-center gap-1.5 mt-1 text-[11px]">
+              <span className="shrink-0">
+                {getCountryFlag(lot.origin_country)}
+              </span>
+              <span className="text-muted truncate">
+                {lot.origin_region || lot.origin_country}
+              </span>
+              <span className="inline-flex items-center gap-0.5 ml-auto shrink-0 bg-accent/10 text-accent px-1.5 py-0.5 rounded-full font-bold">
+                <Star className="w-2.5 h-2.5 fill-accent" />
+                {lot.cupping.overall.toFixed(1)}
+              </span>
+              <span className="inline-flex items-center gap-1 shrink-0 bg-success/10 text-success px-1.5 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+                </span>
+                LIVE
+              </span>
+            </div>
+            <div className="flex items-center gap-2 mt-1 text-[10px] text-muted">
+              <span>{lot.watch_count} watching</span>
+              <span>·</span>
+              <span>{bidCount} bids</span>
+              <span>·</span>
+              <span>{lot.total_kg} kg available</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto md:px-6 md:py-6 md:grid md:grid-cols-5 md:gap-8">
         {/* LEFT COLUMN */}
         <div className="md:col-span-3 space-y-8">
@@ -180,7 +228,7 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
               {PHOTO_SLOTS.map((slot) => (
                 <div
                   key={slot.key}
-                  className="snap-center shrink-0 w-full aspect-[4/3] relative"
+                  className="snap-center shrink-0 w-full aspect-[16/10] relative"
                 >
                   <Image
                     src={photos[slot.key]}
@@ -429,18 +477,17 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
         </div>
       </div>
 
-      {/* Mobile sticky bid panel */}
-      <div className="md:hidden">
-        <BidPanel
-          lot={lot}
-          initialHighBid={initialHighBid}
-          currentHigh={currentHigh}
-          newBidFlash={newBidFlash}
-          bidCount={bidCount}
-          investorIsHighest={investorIsHighest}
-          onPlaceInvestorBid={placeInvestorBid}
-        />
-      </div>
+      {/* Mobile pinned bid panel — always-expanded compact layout */}
+      <BidPanel
+        lot={lot}
+        initialHighBid={initialHighBid}
+        currentHigh={currentHigh}
+        newBidFlash={newBidFlash}
+        bidCount={bidCount}
+        investorIsHighest={investorIsHighest}
+        onPlaceInvestorBid={placeInvestorBid}
+        mobileMode="pinned"
+      />
 
       <style jsx global>{`
         .no-scrollbar::-webkit-scrollbar {

@@ -128,36 +128,26 @@ export function BidPanel({
       <>
         {/* Mobile: fixed bottom, always expanded, compact */}
         <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t border-border shadow-2xl">
-          <div className="px-4 pt-3 pb-4 space-y-2.5">
-            {/* Row 1: price + countdown */}
+          <div className="px-4 pt-2.5 pb-3 space-y-2">
+            {/* Row 1: price + countdown (labels dropped; values self-explanatory) */}
             <div className="flex items-end justify-between gap-3">
-              <div>
-                <p className="text-[9px] text-muted uppercase tracking-widest font-semibold">
-                  Current high
-                </p>
-                <PriceDisplay
-                  amountUSD={currentHigh}
-                  size="lg"
-                  perKg
-                  className={cn(
-                    "text-primary transition-colors rounded-md px-1 -mx-1",
-                    newBidFlash && "animate-flash-green"
-                  )}
-                />
-              </div>
-              <div className="text-right">
-                <p className="text-[9px] text-muted uppercase tracking-widest font-semibold">
-                  Ends in
-                </p>
-                <p
-                  className={cn(
-                    "font-mono tabular-nums font-bold text-2xl leading-none",
-                    countdownColor
-                  )}
-                >
-                  {countdown}
-                </p>
-              </div>
+              <PriceDisplay
+                amountUSD={currentHigh}
+                size="lg"
+                perKg
+                className={cn(
+                  "text-primary transition-colors rounded-md px-1 -mx-1",
+                  newBidFlash && "animate-flash-green"
+                )}
+              />
+              <p
+                className={cn(
+                  "font-mono tabular-nums font-bold text-3xl leading-none",
+                  countdownColor
+                )}
+              >
+                {countdown}
+              </p>
             </div>
 
             {/* Row 2: quick-bid pills */}
@@ -166,7 +156,7 @@ export function BidPanel({
                 <button
                   key={inc}
                   onClick={() => handleBid(currentHigh + inc)}
-                  className="flex-1 min-h-11 rounded-full bg-accent/10 hover:bg-accent hover:text-white text-accent border border-accent/30 text-sm font-bold transition-all duration-200"
+                  className="flex-1 min-h-10 py-2.5 rounded-full bg-accent/10 hover:bg-accent hover:text-white text-accent border border-accent/30 text-sm font-bold transition-all duration-200"
                 >
                   +{formatPrice(inc)}
                 </button>
@@ -180,13 +170,13 @@ export function BidPanel({
               placeholder={`Min ${formatPrice(minNextBid)}`}
               value={customBid}
               onChange={(e) => setCustomBid(e.target.value)}
-              className="w-full border-2 border-border rounded-xl px-4 py-2.5 text-lg tabular-nums font-mono bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              className="w-full border-2 border-border rounded-xl px-4 py-2 text-lg tabular-nums font-mono bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
             />
 
             {/* Row 4: place bid */}
             <button
               onClick={handleCustomBid}
-              className="w-full bg-accent hover:bg-accent-light text-white rounded-xl py-3 text-base font-bold shadow-lg shadow-accent/20 transition-all duration-200 flex items-center justify-center gap-2 min-h-12"
+              className="w-full bg-accent hover:bg-accent-light text-white rounded-xl py-2.5 text-base font-bold shadow-lg shadow-accent/20 transition-all duration-200 flex items-center justify-center gap-2 min-h-11"
             >
               <Gavel className="w-5 h-5" />
               PLACE BID
@@ -196,7 +186,7 @@ export function BidPanel({
             {lot.buy_now_price_per_kg && (
               <button
                 onClick={handleBuyNow}
-                className="w-full bg-success/10 hover:bg-success hover:text-white text-success border border-success/30 rounded-xl py-2 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+                className="w-full bg-success/10 hover:bg-success hover:text-white text-success border border-success/30 rounded-xl py-1.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <ShoppingCart className="w-4 h-4" />
                 Buy Now {formatPrice(lot.buy_now_price_per_kg)}/kg

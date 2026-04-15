@@ -1042,9 +1042,10 @@ const ACTIVE_LOT_TIMING: Record<
   lot2: { startOffsetMin: -30, durationMin: 45 },
   lot3: { startOffsetMin: -15, durationMin: 60 },
   lot4: { startOffsetMin: -40, durationMin: 45 },
-  // lot5 is the demo-fast lot — 3-minute main auction so the investor
-  // reaches the closing round in ~30 seconds during the pitch
-  lot5: { startOffsetMin: -2.5, durationMin: 3 },
+  // lot5 is the demo-fast lot — 45-second main auction that starts on
+  // page load, so the investor can walk the full flow (live → closing
+  // round → hammer) inside a single pitch window
+  lot5: { startOffsetMin: 0, durationMin: 0.75 },
   lot6: { startOffsetMin: -10, durationMin: 45 },
   lot7: { startOffsetMin: -35, durationMin: 45 },
   lot8: { startOffsetMin: -20, durationMin: 45 },

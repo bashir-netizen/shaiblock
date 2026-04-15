@@ -112,7 +112,7 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
   const cuppedByLabel = lot.cupped_by || seller.company_name || seller.display_name;
 
   return (
-    <div className="pb-[320px] md:pb-12 bg-background">
+    <div className="pb-[280px] md:pb-12 bg-background">
       {/* ── Live auction engine phase overlays ── */}
       {clock.phase === "main_ended" && <MainEndedOverlay />}
       {clock.phase === "pending_review" && (
@@ -169,30 +169,31 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
 
       {/* MOBILE-ONLY sticky lot summary card — pinned below the top bar so
           the investor always knows what they're bidding on while scrolling
-          through the TCR and while the bottom bid panel is active. */}
+          through the TCR and while the bottom bid panel is active.
+          Compact form: ~72px tall to leave more room for the scrollable middle. */}
       <div className="md:hidden sticky top-[58px] z-20 bg-card border-b border-border shadow-sm">
-        <div className="flex items-center gap-3 p-3">
-          <div className="relative w-[72px] h-[72px] rounded-lg overflow-hidden shrink-0 bg-stone-100">
+        <div className="flex items-center gap-2.5 px-3 py-2">
+          <div className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-stone-100">
             <Image
               src={photos.dry}
               alt={lot.title}
               fill
-              sizes="72px"
+              sizes="56px"
               className="object-cover"
             />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="font-serif text-base font-bold text-foreground leading-tight line-clamp-2">
+            <h1 className="font-serif text-sm font-bold text-foreground leading-tight line-clamp-1">
               {lot.title}
             </h1>
-            <div className="flex items-center gap-1.5 mt-1 text-[11px]">
+            <div className="flex items-center gap-1.5 mt-0.5 text-[11px]">
               <span className="shrink-0">
                 {getCountryFlag(lot.origin_country)}
               </span>
-              <span className="text-muted truncate">
+              <span className="text-muted truncate min-w-0">
                 {lot.origin_region || lot.origin_country}
               </span>
-              <span className="inline-flex items-center gap-0.5 ml-auto shrink-0 bg-accent/10 text-accent px-1.5 py-0.5 rounded-full font-bold">
+              <span className="inline-flex items-center gap-0.5 shrink-0 bg-accent/10 text-accent px-1.5 py-0.5 rounded-full font-bold">
                 <Star className="w-2.5 h-2.5 fill-accent" />
                 {lot.cupping.overall.toFixed(1)}
               </span>
@@ -203,13 +204,6 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
                 </span>
                 LIVE
               </span>
-            </div>
-            <div className="flex items-center gap-2 mt-1 text-[10px] text-muted">
-              <span>{lot.watch_count} watching</span>
-              <span>·</span>
-              <span>{bidCount} bids</span>
-              <span>·</span>
-              <span>{lot.total_kg} kg available</span>
             </div>
           </div>
         </div>

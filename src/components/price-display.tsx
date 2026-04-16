@@ -12,6 +12,7 @@ interface PriceDisplayProps {
   className?: string;
   align?: "left" | "right" | "center";
   emphasis?: boolean; // if true, USD is bold
+  trend?: "up" | "down";
 }
 
 const SIZE_CLASSES = {
@@ -41,6 +42,7 @@ export function PriceDisplay({
   className,
   align = "left",
   emphasis = true,
+  trend,
 }: PriceDisplayProps) {
   const sizes = SIZE_CLASSES[size];
   const alignClass =
@@ -56,15 +58,17 @@ export function PriceDisplay({
         className={cn(
           "font-mono tabular-nums leading-tight",
           sizes.usd,
-          emphasis && "font-bold"
+          emphasis && "font-bold",
+          trend === "up" && "text-[var(--color-success)]",
+          trend === "down" && "text-[var(--color-danger)]",
         )}
       >
-        {formatPrice(amountUSD)}
-        {perKg && (
-          <span className="font-sans font-normal text-muted ml-0.5 text-[0.6em]">
-            /kg
+        {trend && (
+          <span className="text-[0.6em] mr-0.5">
+            {trend === "up" ? "▲" : "▼"}
           </span>
         )}
+        {formatPrice(amountUSD)}{perKg && <span className="font-sans font-normal text-muted ml-0.5 text-[0.6em]">/kg</span>}
       </div>
       {showSDG && (
         <div

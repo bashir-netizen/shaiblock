@@ -64,7 +64,7 @@ export function BidHistory({ bids, max = 8 }: BidHistoryProps) {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
           </span>
           <span className="text-xs font-bold uppercase tracking-widest text-foreground">
-            Live Bid Activity
+            Live Orders
           </span>
         </div>
         <span className="text-xs text-muted font-semibold">
@@ -86,7 +86,7 @@ export function BidHistory({ bids, max = 8 }: BidHistoryProps) {
               key={bid.id}
               className={cn(
                 "flex items-center justify-between gap-3 px-5 py-3 transition-all duration-500",
-                isNewest && "border-l-4 border-success bg-success/5",
+                isNewest && "border-l-2 border-[var(--color-success)]",
                 isFresh
                   ? "opacity-100 translate-y-0"
                   : "opacity-100 translate-y-0"
@@ -121,8 +121,8 @@ export function BidHistory({ bids, max = 8 }: BidHistoryProps) {
               </div>
               <div className="text-right shrink-0">
                 <p className="font-mono tabular-nums font-bold text-sm text-foreground">
-                  {formatPrice(bid.amount_per_kg)}
-                  <span className="text-[10px] font-normal text-muted">/kg</span>
+                  <span className="text-[var(--color-success)] text-[10px] mr-0.5">▲</span>
+                  {formatPrice(bid.amount_per_kg)}<span className="text-[10px] font-normal text-muted">/kg</span>
                 </p>
                 <p className="text-[10px] text-muted">{timeAgo(bid.placed_at)}</p>
               </div>

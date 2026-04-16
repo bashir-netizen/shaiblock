@@ -113,7 +113,7 @@ export function BidPanel({
               />
               <p
                 className={cn(
-                  "font-mono tabular-nums font-bold text-3xl leading-none",
+                  "font-mono tabular-nums font-bold text-3xl leading-none text-[var(--color-primary)]",
                   countdownColor
                 )}
               >
@@ -127,7 +127,7 @@ export function BidPanel({
                 <button
                   key={inc}
                   onClick={() => handleBid(currentHigh + inc)}
-                  className="flex-1 min-h-10 py-2.5 rounded-full bg-accent/10 hover:bg-accent hover:text-white text-accent border border-accent/30 text-sm font-bold transition-all duration-200"
+                  className="flex-1 min-h-10 py-2.5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-[#dcfce7] text-sm font-bold transition-all duration-200"
                 >
                   +{formatPrice(inc)}
                 </button>
@@ -147,7 +147,7 @@ export function BidPanel({
             {/* Row 4: place bid */}
             <button
               onClick={handleCustomBid}
-              className="w-full bg-accent hover:bg-accent-light text-white rounded-xl py-2.5 text-base font-bold shadow-lg shadow-accent/20 transition-all duration-200 flex items-center justify-center gap-2 min-h-11"
+              className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hot)] text-white rounded-xl py-2.5 text-base font-bold shadow-lg shadow-accent/20 transition-all duration-200 flex items-center justify-center gap-2 min-h-11"
             >
               <Gavel className="w-5 h-5" />
               PLACE BID

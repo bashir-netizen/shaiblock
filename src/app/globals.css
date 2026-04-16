@@ -221,6 +221,14 @@ body {
 .animate-kettle-pulse { animation: kettle-pulse 1s ease-in-out infinite; }
 .animate-skeleton-breathe { animation: skeleton-breathe var(--duration-brew) ease-in-out infinite; }
 
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-ticker-scroll {
+  animation: ticker-scroll 35s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-steam,
   .animate-stamp-land,

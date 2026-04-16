@@ -26,8 +26,8 @@ import { DEMO_BUYER_NAMES, DEMO_BUYER_CITIES } from "@/lib/photos";
 
 const MAIN_ENDED_TRANSITION_MS = 1500;
 const PENDING_REVIEW_MS = 3000;
-const CLOSING_ROUND_DURATION_MS = 60_000;
-const CLOSING_ROUND_EXTENSION_MS = 15_000;
+const CLOSING_ROUND_DURATION_MS = 20_000;
+const CLOSING_ROUND_EXTENSION_MS = 5_000;
 const CLOSING_ROUND_MAX_EXTENSIONS = 3;
 const HAMMERED_STAMP_MS = 3000;
 // Probability the investor wins the closing round (for opponent AI tuning).
@@ -247,12 +247,12 @@ export function useAuctionClock({
     if (!mountedRef.current) return;
     if (opponentTimerRef.current) clearTimeout(opponentTimerRef.current);
 
-    const delay = 2000 + Math.random() * 4000; // 2-6s
+    const delay = 600 + Math.random() * 900; // 0.6-1.5s — aggressive demo tempo
     opponentTimerRef.current = setTimeout(() => {
       if (!mountedRef.current) return;
       const remaining = Math.max(0, closingRoundEndAtRef.current - Date.now());
-      // Concede in the final 5s if not currently winning.
-      if (remaining < 5000) return;
+      // Concede in the final 2s if not currently winning.
+      if (remaining < 2000) return;
 
       setClosingRoundBids((current) => {
         if (current.length === 0) return current;

@@ -19,7 +19,8 @@ import {
   Eye,
 } from "lucide-react";
 import type { Lot, Bid, Profile } from "@/lib/types";
-import { formatKg, getCountryFlag, cn } from "@/lib/utils";
+import { formatKg, formatPrice, getCountryFlag, cn } from "@/lib/utils";
+import { useToast } from "@/components/toast-system";
 import { PriceDisplay } from "@/components/price-display";
 import { TEA_TYPES, HARVEST_SEASONS, PROCESSING_METHODS } from "@/lib/constants";
 import { CuppingRadar } from "@/components/cupping-radar";
@@ -88,6 +89,31 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clock.phase]);
+
+  // Single source of truth for outbid toasts. Previously BidPanel owned
+  // this effect, but two BidPanel instances mount (mobile + desktop hidden)
+  // and both fired — producing duplicate toasts on every sim bid. Hoisting
+  // to the parent means one effect, one toast, regardless of render count.
+  const { showToast } = useToast();
+  const prevHighRef = useRef<number>(initialHighBid);
+  const outbidMountedRef = useRef(false);
+  useEffect(() => {
+    if (!outbidMountedRef.current) {
+      outbidMountedRef.current = true;
+      prevHighRef.current = currentHigh;
+      return;
+    }
+    if (currentHigh !== prevHighRef.current) {
+      if (!investorIsHighest) {
+        showToast({
+          type: "outbid",
+          title: "You've been outbid!",
+          body: `New high bid: ${formatPrice(currentHigh)}/kg`,
+        });
+      }
+      prevHighRef.current = currentHigh;
+    }
+  }, [currentHigh, investorIsHighest, showToast]);
 
   // Photo carousel
   const photos = getLotTCRPhotos(lot.id);
@@ -463,7 +489,6 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
               currentHigh={currentHigh}
               newBidFlash={newBidFlash}
               bidCount={bidCount}
-              investorIsHighest={investorIsHighest}
               onPlaceInvestorBid={placeInvestorBid}
             />
             <BidHistory bids={liveBids} max={8} />
@@ -478,7 +503,6 @@ export function LotDetailClient({ lot, bids, seller }: LotDetailClientProps) {
         currentHigh={currentHigh}
         newBidFlash={newBidFlash}
         bidCount={bidCount}
-        investorIsHighest={investorIsHighest}
         onPlaceInvestorBid={placeInvestorBid}
         mobileMode="pinned"
       />

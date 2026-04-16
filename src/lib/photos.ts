@@ -13,8 +13,8 @@ export const TEA_HEROES: Record<string, string> = {
   lot3: "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?w=1200&q=80", // white tea buds
   // Pu-erh cake
   lot4: "https://images.unsplash.com/photo-1545665225-b23b99e4d45e?w=1200&q=80", // chinese tea set
-  // Matcha
-  lot5: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?w=1200&q=80", // matcha bowl
+  // Rwanda Highlands orthodox black
+  lot5: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=1200&q=80", // dry black tea leaves
   // Kenya CTC
   lot6: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=1200&q=80", // tea cup from above
   // Ceylon OP1
@@ -58,9 +58,9 @@ export const TCR_PHOTOS: Record<string, {
     packaging: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&q=80",
   },
   lot5: {
-    dry: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?w=800&q=80",
+    dry: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&q=80",
+    wet: "https://images.unsplash.com/photo-1563822249366-3efb23b8e0c9?w=800&q=80",
+    liquor: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=800&q=80",
     packaging: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80",
   },
   lot6: {

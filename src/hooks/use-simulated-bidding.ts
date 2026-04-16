@@ -6,12 +6,12 @@ import { DEMO_BUYER_NAMES, DEMO_BUYER_CITIES } from "@/lib/photos";
 
 // Sim bidders pause for this long after the investor places a bid,
 // so the user gets a moment of "I'm winning" before competition resumes.
-const INVESTOR_BID_PAUSE_MS = 5_000;
+const INVESTOR_BID_PAUSE_MS = 1_500;
 
 // ============================================================
 // useSimulatedBidding — the core investor-demo magic
-// Every 4-12 seconds, a fake bid arrives from a random "buyer"
-// Price climbs by bid_increment each time
+// Every ~0.8-1.8 seconds, a fake bid arrives from a random "buyer"
+// Price climbs by bid_increment each time (55% chance of 2x jumps)
 // ============================================================
 
 export interface SimulatedBid extends Bid {
@@ -112,8 +112,8 @@ export function useSimulatedBidding(opts: {
 
     function scheduleNextBid() {
       if (!mounted) return;
-      // Random interval: 4-12 seconds
-      const delay = 4000 + Math.random() * 8000;
+      // Random interval: 0.8-1.8 seconds — aggressive demo tempo
+      const delay = 800 + Math.random() * 1000;
 
       bidTimerRef.current = setTimeout(() => {
         if (!mounted) return;
@@ -133,7 +133,7 @@ export function useSimulatedBidding(opts: {
         // Advance price. If the delta would exceed maxPrice, step by a
         // smaller amount so the loop never deadlocks — the point of the
         // cap is to keep the demo number plausible, not to halt bidding.
-        let delta = bidIncrement * (Math.random() > 0.7 ? 2 : 1);
+        let delta = bidIncrement * (Math.random() > 0.45 ? 2 : 1);
         let newAmount = +(priceRef.current + delta).toFixed(2);
         if (maxPrice && newAmount > maxPrice) {
           delta = bidIncrement;
@@ -226,7 +226,7 @@ export function useSimulatedBidding(opts: {
       setCurrentHigh(amount);
       setLastBidTime(Date.now());
       setNewBidFlash(true);
-      // Pause sim bidders for 10 seconds so the investor feels like the leader
+      // Pause sim bidders briefly so the investor feels like the leader
       investorJustBidAtRef.current = Date.now();
       if (flashOffTimerRef.current) clearTimeout(flashOffTimerRef.current);
       flashOffTimerRef.current = setTimeout(() => setNewBidFlash(false), 800);

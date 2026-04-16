@@ -148,6 +148,11 @@ export interface Lot {
   seller?: Profile;
   current_high_bid?: number;
   user_is_winning?: boolean;
+
+  // Trading terminal — sold lot fields
+  final_price_per_kg?: number;
+  sold_at?: string;
+  winning_buyer_id?: string;
 }
 
 export type BidStatus = "active" | "outbid" | "won" | "lost" | "cancelled";
@@ -271,4 +276,11 @@ export interface SellerReview {
   comment?: string;
   created_at: string;
   buyer?: Profile;
+}
+
+export interface TickerItem {
+  symbol: string;
+  price: number;
+  change: number;
+  direction: "up" | "down";
 }

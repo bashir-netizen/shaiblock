@@ -116,7 +116,7 @@ Tab switcher with three panes. Simple `useState` tab index, no routing.
 
 **Tab bar styling:** warm beige background, muted brown text, active tab gets emerald text + 2px emerald bottom border.
 
-**Content area:** scrollable, takes remaining height between tab bar and pinned bid panel. Each tab's content is only rendered when active (not hidden with CSS — unmounted to save memory on mobile).
+**Content area:** scrollable, takes remaining height between tab bar and pinned bid panel. Inactive tabs are hidden with CSS `display:none` (not unmounted) to prevent the cupping radar from re-animating on every tab switch.
 
 ### 4. `MarketFeed` (`src/components/market-feed.tsx`)
 
@@ -227,6 +227,14 @@ New animation keyframe:
 | `src/components/bid-panel.tsx` | Restyle pinned mode colors (emerald pills, amber button) |
 | `src/app/auctions/[id]/lot-detail-client.tsx` | Major mobile restructure — ticker, price band, tabs |
 | `src/app/globals.css` | Add `ticker-scroll` keyframe |
+
+## Design Decisions (from review)
+
+1. **Sparse sparkline** — Below 4 data points, render a flat dashed line at the current price. Switch to the real polyline once 4+ bids exist. No placeholder UI.
+2. **Ticker performance** — Ticker items are computed once from `getSoldLots()` + initial active lot prices, memoized with `useMemo`. The ticker does NOT subscribe to live bid state — it's a static market context strip, decoupled from `useSimulatedBidding`.
+3. **Tab visibility** — Use CSS `display:none` on inactive tabs instead of unmounting. Prevents the cupping radar from re-animating on every tab switch. Memory cost is negligible for 3 lightweight tabs.
+4. **Sparkline interaction** — Purely decorative. No touch targets, no tooltips. Exact bid amounts are visible in the Live Orders section one tab away.
+5. **Negative premiums** — Sold lot mix: 4-5 positive premiums, 1 slightly negative (-3% max). Avoid anything beyond -5% to prevent signaling market weakness.
 
 ## Out of Scope
 

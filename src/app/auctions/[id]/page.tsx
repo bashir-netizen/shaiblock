@@ -1,4 +1,4 @@
-import { getLotById, getBidsForLot, sellers } from "@/lib/mock-data";
+import { getLotById, getBidsForLot, sellers, getSoldLots, getMarketTickerItems } from "@/lib/mock-data";
 import { LotDetailClient } from "./lot-detail-client";
 
 // Force per-request rendering so the countdown timestamps are always fresh.
@@ -26,6 +26,8 @@ export default async function LotDetailPage({ params }: PageProps) {
 
   const bids = getBidsForLot(id);
   const seller = lot.seller || sellers.find((s) => s.id === lot.seller_id);
+  const soldLots = getSoldLots();
+  const tickerItems = getMarketTickerItems();
 
-  return <LotDetailClient lot={lot} bids={bids} seller={seller!} />;
+  return <LotDetailClient lot={lot} bids={bids} seller={seller!} soldLots={soldLots} tickerItems={tickerItems} />;
 }

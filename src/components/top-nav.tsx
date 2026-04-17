@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { useAuth } from "@/components/providers";
+import { LogoutButton } from "@/components/logout-button";
 import { Wordmark } from "@/components/brand/wordmark";
 import { Chip } from "@/components/ui/chip";
 import { Stamp } from "@/components/ui/stamp";
@@ -109,6 +110,9 @@ export function TopNav() {
               })}
             </div>
           )}
+
+          {/* Log Out */}
+          <LogoutButton />
 
           {/* Notifications */}
           <Link href="/notifications" className="relative p-1" aria-label={`Notifications (${UNREAD_COUNT} unread)`}>

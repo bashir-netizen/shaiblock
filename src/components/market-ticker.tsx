@@ -14,7 +14,7 @@ export function MarketTicker({ items }: MarketTickerProps) {
   if (items.length === 0) return null;
 
   return (
-    <div className="md:hidden bg-[var(--color-bg)] border-b border-[var(--color-rule)] overflow-hidden relative">
+    <div className="bg-[var(--color-bg)] border-b border-[var(--color-rule)] overflow-hidden relative">
       <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[var(--color-bg)] to-transparent z-10 pointer-events-none" />
       <div className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[var(--color-bg)] to-transparent z-10 pointer-events-none" />
       <div className="flex items-center gap-6 py-1.5 px-2 whitespace-nowrap animate-ticker-scroll">

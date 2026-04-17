@@ -112,8 +112,8 @@ export function useSimulatedBidding(opts: {
 
     function scheduleNextBid() {
       if (!mounted) return;
-      // Random interval: 0.8-1.8 seconds — aggressive demo tempo
-      const delay = 800 + Math.random() * 1000;
+      // Random interval: 2-4 seconds — lively but not overwhelming
+      const delay = 2000 + Math.random() * 2000;
 
       bidTimerRef.current = setTimeout(() => {
         if (!mounted) return;

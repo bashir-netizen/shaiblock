@@ -57,7 +57,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const showToast = useCallback((toast: Omit<Toast, "id">) => {
     const id = `toast-${Date.now()}-${Math.random()}`;
-    const newToast: Toast = { ...toast, id, duration: toast.duration || 4000 };
+    const dur = toast.type === "outbid" ? 2000 : (toast.duration || 4000);
+    const newToast: Toast = { ...toast, id, duration: dur };
     setToasts((prev) => [...prev, newToast]);
 
     const timer = setTimeout(() => {
@@ -125,8 +126,8 @@ function ToastItem({
     },
     outbid: {
       icon: Zap,
-      bg: "bg-danger text-white border-danger",
-      iconColor: "text-white",
+      bg: "bg-card border-accent/40",
+      iconColor: "text-accent",
     },
   }[toast.type];
 
@@ -138,7 +139,7 @@ function ToastItem({
         "pointer-events-auto rounded-xl border-2 shadow-2xl px-4 py-3 flex items-start gap-3 transition-all duration-300",
         config.bg,
         visible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
-        toast.type === "outbid" && "animate-pulse-danger"
+        false
       )}
     >
       <Icon className={cn("h-5 w-5 flex-shrink-0 mt-0.5", config.iconColor)} />
@@ -146,7 +147,7 @@ function ToastItem({
         <div
           className={cn(
             "font-bold text-sm",
-            toast.type === "outbid" ? "text-white" : "text-foreground"
+            "text-foreground"
           )}
         >
           {toast.title}
@@ -155,7 +156,7 @@ function ToastItem({
           <div
             className={cn(
               "text-xs mt-0.5",
-              toast.type === "outbid" ? "text-white/90" : "text-muted"
+              "text-muted"
             )}
           >
             {toast.body}
@@ -166,7 +167,7 @@ function ToastItem({
         onClick={() => onDismiss(toast.id)}
         className={cn(
           "flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity",
-          toast.type === "outbid" ? "text-white" : "text-muted"
+          "text-muted"
         )}
       >
         <X className="h-4 w-4" />

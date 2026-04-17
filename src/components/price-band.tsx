@@ -73,7 +73,7 @@ export function PriceBand({
   const direction = change >= 0 ? "up" : "down";
 
   return (
-    <div className="md:hidden bg-[var(--color-bg)] border-b-[3px] border-[var(--color-primary)] px-4 py-3">
+    <div className="max-w-3xl mx-auto bg-[var(--color-bg)] border-b-[3px] border-[var(--color-primary)] px-4 py-3">
       <p className="text-[8px] font-bold uppercase tracking-[1.5px] text-[var(--color-ink-muted)] mb-1">
         Current High Bid
       </p>

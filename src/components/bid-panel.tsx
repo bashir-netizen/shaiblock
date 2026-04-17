@@ -97,9 +97,9 @@ export function BidPanel({
   if (mobileMode === "pinned") {
     return (
       <>
-        {/* Mobile: fixed bottom, always expanded, compact */}
-        <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t border-border shadow-2xl">
-          <div className="px-4 pt-2.5 pb-3 space-y-2">
+        {/* Fixed bottom, always expanded, compact */}
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-card border-t border-border shadow-2xl">
+          <div className="max-w-3xl mx-auto px-4 pt-2.5 pb-3 space-y-2">
             {/* Row 1: price + countdown (labels dropped; values self-explanatory) */}
             <div className="flex items-end justify-between gap-3">
               <PriceDisplay
@@ -163,129 +163,6 @@ export function BidPanel({
                 Buy Now {formatPrice(lot.buy_now_price_per_kg)}/kg
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Desktop: render the legacy inline layout unchanged */}
-        <div className="hidden md:block">
-          <div className="relative bg-card border border-border rounded-2xl shadow-lg shadow-primary/5">
-            <div className="p-5 md:p-6 space-y-5">
-              {/* Stats row */}
-              <div className="flex items-center justify-between text-xs text-muted">
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" />
-                    <span className="font-semibold text-foreground">
-                      {bidCount}
-                    </span>
-                    <span>bids</span>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Eye className="w-3.5 h-3.5" />
-                    <span className="font-semibold text-foreground">
-                      {lot.watch_count}
-                    </span>
-                    <span>watching</span>
-                  </span>
-                </div>
-                <span className="inline-flex items-center gap-1.5 text-success font-semibold">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
-                  </span>
-                  LIVE
-                </span>
-              </div>
-              {/* Price + countdown */}
-              <div className="flex items-end justify-between gap-4 pb-4 border-b border-border">
-                <div>
-                  <p className="text-[10px] text-muted uppercase tracking-widest font-semibold mb-1">
-                    Current high bid
-                  </p>
-                  <PriceDisplay
-                    amountUSD={currentHigh}
-                    size="xl"
-                    perKg
-                    className={cn(
-                      "text-primary transition-colors rounded-lg px-1 -mx-1",
-                      newBidFlash && "animate-flash-green"
-                    )}
-                  />
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-muted uppercase tracking-widest font-semibold">
-                    Ends in
-                  </p>
-                  <p
-                    className={cn(
-                      "font-mono tabular-nums font-bold text-3xl md:text-4xl leading-none",
-                      countdownColor
-                    )}
-                  >
-                    {countdown}
-                  </p>
-                </div>
-              </div>
-              {/* User status */}
-              <div>
-                {lot.user_is_winning ? (
-                  <Badge variant="success" size="md">
-                    YOU&apos;RE WINNING
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" size="md">
-                    Place your first bid
-                  </Badge>
-                )}
-              </div>
-              {/* Quick bid pills */}
-              <div className="flex gap-2">
-                {BID_INCREMENTS.map((inc) => (
-                  <button
-                    key={inc}
-                    onClick={() => handleBid(currentHigh + inc)}
-                    className="flex-1 min-h-11 py-3 rounded-full bg-accent/10 hover:bg-accent hover:text-white text-accent border border-accent/30 text-sm font-bold transition-all duration-200"
-                  >
-                    +{formatPrice(inc)}
-                  </button>
-                ))}
-              </div>
-              {/* Custom bid input */}
-              <div>
-                <label className="text-[10px] text-muted uppercase tracking-widest font-semibold">
-                  Custom bid
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder={`Min ${formatPrice(minNextBid)}`}
-                  value={customBid}
-                  onChange={(e) => setCustomBid(e.target.value)}
-                  className="mt-1 w-full border-2 border-border rounded-xl px-4 py-3 text-xl tabular-nums font-mono bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                />
-              </div>
-              {/* Place bid */}
-              <button
-                onClick={handleCustomBid}
-                className="w-full bg-accent hover:bg-accent-light text-white rounded-xl py-4 text-lg font-bold shadow-lg shadow-accent/20 transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <Gavel className="w-5 h-5" />
-                PLACE BID
-              </button>
-              {/* Buy now */}
-              {lot.buy_now_price_per_kg && (
-                <button
-                  onClick={handleBuyNow}
-                  className="w-full bg-success hover:opacity-90 text-white rounded-xl py-4 text-lg font-bold shadow-lg shadow-success/20 transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  BUY NOW at {formatPrice(lot.buy_now_price_per_kg)}/kg
-                </button>
-              )}
-              <p className="text-[10px] text-muted text-center">
-                A {BUYER_PREMIUM_PCT}% buyer premium will apply at checkout
-              </p>
-            </div>
           </div>
         </div>
       </>

@@ -20,7 +20,7 @@ export function LotDetailTabs({
   const [active, setActive] = useState<TabName>("Market Feed");
 
   return (
-    <div className="md:hidden">
+    <div className="max-w-3xl mx-auto">
       <div className="flex bg-[var(--color-bg)] border-b border-[var(--color-rule)] sticky top-[58px] z-20">
         {TABS.map((tab) => (
           <button

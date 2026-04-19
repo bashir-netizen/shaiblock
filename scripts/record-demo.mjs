@@ -257,132 +257,137 @@ async function main() {
     }),
     { waitUntil: "domcontentloaded" }
   );
-  await wait(2800); // let the fade-up + divider + tagline animations breathe
+  await wait(2000);
 
-  // ─── Scene 1: Landing page (brand moment) ──────────────
+  // ─── Scene 1: Landing page — scroll + return ──────────
   console.log("▶ Scene 1: Landing page");
   await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-  await wait(2200); // let hero settle
-  await smoothScrollBy(page, 500, 1300);
-  await wait(900);
-  await smoothScrollBy(page, -500, 1100); // back to top
+  await wait(1600); // hero settle
+  await smoothScrollBy(page, 600, 1100);
+  await wait(600);
+  await smoothScrollToTop(page, 900);
+  await wait(300);
+
+  // ─── Scene 2: Log in ──────────────────────────────────
+  console.log("▶ Scene 2: Log in");
+  const emailField = page.locator('input[type="email"]').first();
+  const passwordField = page.locator('input[type="password"]').first();
+  const loginBtn = page.getByRole("button", { name: /^Log in$/i });
+
+  await emailField.click();
+  await emailField.type("abdirizakhassid@gmail.com", { delay: 30 });
+  await wait(200);
+  await passwordField.click();
+  await passwordField.type("demo-access-2026", { delay: 25 });
+  await wait(300);
+  await clickWithRipple(page, loginBtn);
+  await page.waitForURL("**/auctions", { timeout: 8000 });
+
+  // ─── Scene 3: Auctions list ────────────────────────────
+  console.log("▶ Scene 3: Auctions list");
+  await wait(1100);
+  await smoothScrollBy(page, 180, 900);
   await wait(700);
 
-  // ─── Scene 2: Click into the auction list ─────────────
-  console.log("▶ Scene 2: Navigate to auctions");
-  const browseCta = page
-    .getByRole("link", { name: /Browse Live Auctions/i })
-    .first();
-  try {
-    await browseCta.scrollIntoViewIfNeeded({ timeout: 2000 });
-  } catch {}
-  await wait(300);
-  await clickWithRipple(page, browseCta);
-  await page.waitForURL("**/auctions", { timeout: 10_000 });
-  await wait(1200);
-  await smoothScrollBy(page, 280, 1100);
-  await wait(900);
-
-  // ─── Scene 3: Open lot5 — starts a fresh 20s auction ──
-  console.log("▶ Scene 3: Open lot5 (starts the 20s clock)");
+  // ─── Scene 4: Open lot5 (25s demo auction) ─────────────
+  console.log("▶ Scene 4: Open lot5");
   const lotLink = page.locator('a[href="/auctions/lot5"]').first();
-  // Best-effort scroll — auction cards re-render live pricing, so
-  // Playwright's stability check can fail. Click itself handles scroll.
   try {
     await lotLink.scrollIntoViewIfNeeded({ timeout: 2000 });
   } catch {}
-  await wait(300);
+  await wait(200);
   await clickWithRipple(page, lotLink);
   await page.waitForURL("**/auctions/lot5", { timeout: 10_000 });
-  await wait(1400); // lot5 clock now at ~18.5s remaining
+  await wait(700);
 
-  // ─── Scene 4: Lot detail hero tour (~8s) ──────────────
-  // Showcases the product's differentiated content: TCR scores,
-  // CuppingRadar chart, tasting notes, seller card.
-  console.log("▶ Scene 4: Lot detail hero tour");
+  // ─── Scene 5: Review lot in detail, then bid from Market Feed ──
+  // Buyer workflow: Market Feed → Lot Details tab → review photos/TCR
+  // → back to Market Feed → place bid. $48 is above the $45 reserve
+  // (skips pending_review) but leaves the opponent AI room to catch up
+  // in the 20s closing round, forcing a visible raise click.
+  console.log("▶ Scene 5: Browse lot details + bid");
 
-  // Beat A — photo / title area
-  await smoothScrollBy(page, 320, 1200);
-  await wait(1200);
+  await wait(600); // brief dwell on default Market Feed tab
 
-  // Beat B — reveal the Cupping Profile / radar chart.
-  // Dead-reckoned scroll (not text-anchored) because the Live Bid Activity
-  // section below keeps reflowing under aggressive sim bids, which breaks
-  // scrollIntoViewIfNeeded's stability check.
-  await smoothScrollBy(page, 380, 1200);
-  await wait(2100); // linger on the radar — this is hero content
-
-  // Beat C — continue down into tasting notes / seller preview
-  await smoothScrollBy(page, 260, 1100);
-  await wait(1500);
-
-  // Beat D — smooth scroll back to top for the bid moment
-  await smoothScrollToTop(page, 1200);
-  await wait(500);
-
-  // ─── Scene 5: Place a quick bid ─────────────────────────
-  console.log("▶ Scene 5: Place a bid via the +$0.50 quick pill");
-  const bidPill = page.getByRole("button", { name: "+$0.50" }).first();
-  await bidPill.hover();
+  const detailsTab = page.getByRole("button", { name: "Lot Details" }).first();
+  await clickWithRipple(page, detailsTab);
   await wait(400);
-  await clickWithRipple(page, bidPill);
-  await wait(2200); // "you're the high bidder" beat — watch flash-green play
 
-  // ─── Scene 5b: Scroll to Live Bid Activity feed ────────
-  // Viewer sees rival bidders sliding in with green highlights,
-  // names, cities — the "aggressive bidding" moment.
-  console.log("▶ Scene 5b: Scroll to Live Bid Activity");
-  await page
-    .getByText("Live Bid Activity")
-    .first()
-    .scrollIntoViewIfNeeded();
-  await wait(4000); // let 3-5 sim bids slide in with green highlights
+  await smoothScrollBy(page, 420, 1000);
+  await wait(900);
+  await smoothScrollBy(page, 280, 800);
+  await wait(700);
 
-  // ─── Scene 5c: Smooth scroll back to top ───────────────
-  console.log("▶ Scene 5c: Scroll back to top");
-  await smoothScrollToTop(page, 1100);
-  await wait(400);
+  const feedTab = page.getByRole("button", { name: "Market Feed" }).first();
+  await clickWithRipple(page, feedTab);
+  await wait(350);
+  await smoothScrollToTop(page, 600);
+  await wait(250);
+
+  // Wait until the main-round countdown drops to ≤3 seconds before
+  // bidding. Sim bidders climb from currentHigh after every tick, so
+  // any early investor bid gets leapfrogged within 2-4s. Bidding late
+  // guarantees the investor is still top-1 when main_ended fires.
+  await page.waitForFunction(
+    () => {
+      const el = document.querySelector(
+        '.fixed.bottom-0 p.font-mono.tabular-nums'
+      );
+      if (!el || !el.textContent) return false;
+      const m = el.textContent.match(/(\d+):(\d+)/);
+      if (!m) return false;
+      return parseInt(m[1]) * 60 + parseInt(m[2]) <= 3;
+    },
+    null,
+    { timeout: 25_000, polling: 200 }
+  );
+
+  const chevron = page
+    .locator('button[aria-label*="advanced bid options"]')
+    .first();
+  await clickWithRipple(page, chevron);
+  await wait(250);
+
+  const customInput = page
+    .locator('input[aria-label="Custom bid amount per kilogram"]')
+    .first();
+  await customInput.click();
+  // Bid $55 with <3s remaining in main round — sim bidders can't
+  // respond in time, investor locks in top-1.
+  await customInput.type("55", { delay: 60 });
+  await wait(150);
+  const placeBidBtn = page.getByRole("button", { name: /^PLACE BID$/ });
+  await clickWithRipple(page, placeBidBtn);
+  await wait(800);
 
   // ─── Scene 6: Main auction ends → "Preparing closing round" ─
   console.log("▶ Scene 6: Main auction ended overlay");
   await page
     .getByText(/Preparing closing round/i)
     .waitFor({ state: "visible", timeout: 90_000 });
-  await wait(1600); // full 1.5s MainEndedOverlay beat
-
-  // ─── Scene 6b: Seller is reviewing (pending_review phase) ──
-  // Fires when the main auction's highest bid is below reserve.
-  // lot5 reserve is $45/kg, so this branch always hits in the demo.
-  console.log("▶ Scene 6b: Seller is reviewing");
-  try {
-    await page
-      .getByText(/Seller is reviewing/i)
-      .waitFor({ state: "visible", timeout: 4000 });
-    await wait(3200); // let viewer see "Reviewing..." → "Approved closing round"
-  } catch {
-    console.log("  (reserve was met — skipping pending review dwell)");
-  }
+  await wait(1200);
 
   // ─── Scene 7: Closing round — head-to-head tension ────
   console.log("▶ Scene 7: Closing round");
   await page
     .getByRole("dialog", { name: /Closing round/i })
     .waitFor({ state: "visible", timeout: 15_000 });
-  await wait(5000); // tension beat — both columns, opponent name, breathing room
+  await wait(3000);
 
-  // Raise button only enables when the opponent is ahead.
-  // Wait up to 25s for the chance, ripple the click.
+  // Raise button only enables when the opponent is ahead. Give the
+  // opponent AI 6s to try to catch up; if it can't, the investor is
+  // already winning and we move on.
   try {
     const raiseBtn = page.getByRole("button", { name: /^Raise to \$/ });
-    await raiseBtn.waitFor({ state: "visible", timeout: 25_000 });
+    await raiseBtn.waitFor({ state: "visible", timeout: 6000 });
     await raiseBtn.hover();
-    await wait(800);
+    await wait(400);
     await clickWithRipple(page, raiseBtn);
     console.log("  → raised");
-    await wait(6000); // let more opponent exchanges play out post-raise
+    await wait(2500);
   } catch {
     console.log("  (investor winning the whole closing round — no raise)");
-    await wait(6000);
+    await wait(2000);
   }
 
   // ─── Scene 8: Hammer stamp — SOLD ──────────────────────
@@ -391,7 +396,7 @@ async function main() {
     .getByText("SOLD")
     .first()
     .waitFor({ state: "visible", timeout: 60_000 });
-  await wait(6000); // long dwell — let the payoff breathe
+  await wait(3500);
 
   // ─── Scene 9: End card ────────────────────────────────
   console.log("▶ Scene 9: End card");
@@ -402,7 +407,7 @@ async function main() {
     }),
     { waitUntil: "domcontentloaded" }
   );
-  await wait(3000);
+  await wait(1800);
 
   // ─── Wrap up ───────────────────────────────────────────
   const videoPromise = page.video()?.path();

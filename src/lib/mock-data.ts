@@ -1357,10 +1357,10 @@ const ACTIVE_LOT_TIMING: Record<
   lot2: { startOffsetMin: -30, durationMin: 45 },
   lot3: { startOffsetMin: -15, durationMin: 60 },
   lot4: { startOffsetMin: -40, durationMin: 45 },
-  // lot5 is the demo lot — 45-second main auction that starts on page
-  // load, giving enough time to browse the trading terminal before the
-  // closing round fires.
-  lot5: { startOffsetMin: 0, durationMin: 0.75 },
+  // lot5 is the demo lot — 20-second main auction that starts on page
+  // load. Short enough to fit the full flow inside a 60s YouTube Short
+  // (main round + closing round + SOLD stamp).
+  lot5: { startOffsetMin: 0, durationMin: 0.33 },
   lot6: { startOffsetMin: -10, durationMin: 45 },
   lot7: { startOffsetMin: -35, durationMin: 45 },
   lot8: { startOffsetMin: -20, durationMin: 45 },

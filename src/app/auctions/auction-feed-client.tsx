@@ -48,9 +48,7 @@ function ActivityIcon({ action }: { action: LiveActivityEvent["action"] }) {
   return <Gavel className="h-3.5 w-3.5 text-primary" />;
 }
 
-function LiveActivityBar({ lotTitles }: { lotTitles: string[] }) {
-  const events = useLiveActivityFeed(lotTitles, true);
-
+function LiveActivityBar({ events }: { events: LiveActivityEvent[] }) {
   // Duplicate the events so the marquee loops seamlessly
   const loop = [...events, ...events];
 
@@ -131,6 +129,7 @@ export function AuctionFeedClient({ initialLots }: AuctionFeedClientProps) {
   const [activeChip, setActiveChip] = useState("all");
 
   const lotTitles = useMemo(() => initialLots.map((l) => l.title), [initialLots]);
+  const { events: liveEvents, bidsInLastMinute } = useLiveActivityFeed(lotTitles, true);
 
   const handleChipClick = (key: string) => {
     setActiveChip(key);
@@ -261,13 +260,10 @@ export function AuctionFeedClient({ initialLots }: AuctionFeedClientProps) {
     return result;
   }, [initialLots, search, sort, filters]);
 
-  // Semi-dynamic "X bids in the last minute" — pulses from a base by mod of lot count
-  const bidsLastMinute = 42 + (initialLots.length % 7) * 3;
-
   return (
     <>
       {/* Live activity ticker */}
-      <LiveActivityBar lotTitles={lotTitles} />
+      <LiveActivityBar events={liveEvents} />
 
       {/* Section header */}
       <div className="px-4 pt-8 pb-4">
@@ -284,8 +280,8 @@ export function AuctionFeedClient({ initialLots }: AuctionFeedClientProps) {
               {initialLots.length} lots
             </span>{" "}
             live right now ·{" "}
-            <span className="font-semibold text-foreground">
-              {bidsLastMinute} bids
+            <span className="font-semibold text-foreground tabular-nums">
+              {bidsInLastMinute} bids
             </span>{" "}
             in the last minute
           </span>

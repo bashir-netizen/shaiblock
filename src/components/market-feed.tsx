@@ -11,7 +11,7 @@ export function MarketFeed({ soldLots }: MarketFeedProps) {
   if (soldLots.length === 0) {
     return (
       <div className="p-6 text-center text-[var(--color-ink-muted)] text-sm">
-        No recent market data.
+        No recent sales — check back after the first lot closes.
       </div>
     );
   }

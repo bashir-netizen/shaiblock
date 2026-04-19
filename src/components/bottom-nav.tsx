@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, User } from "lucide-react";
 import { LeafMark, CuppingBowl, Ladle } from "@/components/icons/tea";
+import { useUnreadCount } from "@/hooks/use-unread-count";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -14,10 +15,9 @@ const tabs = [
   { label: "Profile", href: "/profile/me", icon: User },
 ] as const;
 
-const UNREAD_COUNT = 2;
-
 export function BottomNav() {
   const pathname = usePathname();
+  const unreadCount = useUnreadCount();
 
   // PRESERVED from review-fixes commit ae748f2: hide BottomNav on lot detail
   // pages so the sticky BidPanel has full bottom real-estate.
@@ -49,9 +49,9 @@ export function BottomNav() {
             >
               <span className="relative">
                 <Icon size={22} className={cn(isActive && "scale-[1.05]")} />
-                {tab.label === "Notifications" && UNREAD_COUNT > 0 && (
+                {tab.label === "Notifications" && unreadCount > 0 && (
                   <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-wax)] px-1 text-[10px] font-bold text-white">
-                    {UNREAD_COUNT}
+                    {unreadCount}
                   </span>
                 )}
               </span>

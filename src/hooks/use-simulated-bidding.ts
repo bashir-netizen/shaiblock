@@ -266,9 +266,17 @@ export interface LiveActivityEvent {
 }
 
 export function useLiveActivityFeed(lotTitles: string[], enabled = true) {
+  // Running log of bid timestamps. The `events` array is capped at 15, but
+  // once the demo has been running a while we want the "bids in last 60s"
+  // readout to reflect every bid that fired — not just the tail that
+  // happens to still be in the ticker.
+  const bidTimestampsRef = useRef<number[]>([]);
+
   const [events, setEvents] = useState<LiveActivityEvent[]>(() => {
-    // Seed with 5 initial events
-    return Array.from({ length: 5 }, (_, i) => {
+    // Seed with 5 initial events. Only seed[0] (t-0) falls within the
+    // last-minute window; seeds 1..4 are 1..4 minutes old so the counter
+    // starts honest rather than inflated.
+    const seeded = Array.from({ length: 5 }, (_, i) => {
       const { name, city } = randomBuyer();
       return {
         id: `seed-${i}`,
@@ -280,7 +288,21 @@ export function useLiveActivityFeed(lotTitles: string[], enabled = true) {
         timestamp: Date.now() - i * 1000 * 60,
       };
     });
+    bidTimestampsRef.current = seeded.map((e) => e.timestamp);
+    return seeded;
   });
+
+  const [bidsInLastMinute, setBidsInLastMinute] = useState(0);
+  useEffect(() => {
+    const tick = () => {
+      const cutoff = Date.now() - 60_000;
+      bidTimestampsRef.current = bidTimestampsRef.current.filter((t) => t > cutoff);
+      setBidsInLastMinute(bidTimestampsRef.current.length);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!enabled || lotTitles.length === 0) return;
@@ -308,6 +330,9 @@ export function useLiveActivityFeed(lotTitles: string[], enabled = true) {
           timestamp: Date.now(),
         };
 
+        if (action === "bid") {
+          bidTimestampsRef.current.push(newEvent.timestamp);
+        }
         setEvents((prev) => [newEvent, ...prev].slice(0, 15));
       },
       3000 + Math.random() * 3000
@@ -316,5 +341,5 @@ export function useLiveActivityFeed(lotTitles: string[], enabled = true) {
     return () => clearInterval(interval);
   }, [enabled, lotTitles]);
 
-  return events;
+  return { events, bidsInLastMinute };
 }

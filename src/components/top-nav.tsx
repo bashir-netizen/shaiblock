@@ -9,6 +9,7 @@ import { LogoutButton } from "@/components/logout-button";
 import { Wordmark } from "@/components/brand/wordmark";
 import { Chip } from "@/components/ui/chip";
 import { Stamp } from "@/components/ui/stamp";
+import { useUnreadCount } from "@/hooks/use-unread-count";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -17,11 +18,10 @@ const navLinks = [
   { label: "Buy Now", href: "/auctions?filter=buy-now" },
 ] as const;
 
-const UNREAD_COUNT = 2;
-
 export function TopNav() {
   const pathname = usePathname();
   const { user, setRole } = useAuth();
+  const unreadCount = useUnreadCount();
   const [collapsed, setCollapsed] = useState(false);
 
   // Collapse on scroll past 120px for a calmer reading experience
@@ -115,11 +115,11 @@ export function TopNav() {
           <LogoutButton />
 
           {/* Notifications */}
-          <Link href="/notifications" className="relative p-1" aria-label={`Notifications (${UNREAD_COUNT} unread)`}>
+          <Link href="/notifications" className="relative p-1" aria-label={`Notifications (${unreadCount} unread)`}>
             <Bell className="h-5 w-5 text-[var(--color-ink-muted)] hover:text-foreground transition-colors" />
-            {UNREAD_COUNT > 0 && (
+            {unreadCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5">
-                <Stamp label={String(UNREAD_COUNT)} color="wax" size="xs" />
+                <Stamp label={String(unreadCount)} color="wax" size="xs" />
               </span>
             )}
           </Link>

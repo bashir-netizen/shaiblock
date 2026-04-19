@@ -14,9 +14,11 @@ import type { Lot, TickerItem } from "@/lib/types";
 interface LandingClientProps {
   lots: Lot[];
   tickerItems: TickerItem[];
+  liveCount: number;
+  originCount: number;
 }
 
-export function LandingClient({ lots, tickerItems }: LandingClientProps) {
+export function LandingClient({ lots, tickerItems, liveCount, originCount }: LandingClientProps) {
   const { isLoggedIn, login } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -45,9 +47,6 @@ export function LandingClient({ lots, tickerItems }: LandingClientProps) {
           <a href="#login" className="text-white/80 hover:text-white text-sm font-semibold transition-colors">
             Log In
           </a>
-          <span className="text-white/80 hover:text-white text-sm font-semibold cursor-pointer transition-colors">
-            Register
-          </span>
         </div>
       </header>
 
@@ -92,10 +91,6 @@ export function LandingClient({ lots, tickerItems }: LandingClientProps) {
             >
               Log In
             </button>
-            <p className="text-white/50 text-xs">
-              Don&apos;t have an account?{" "}
-              <span className="text-white/80 underline cursor-pointer">Register</span>
-            </p>
           </form>
         </div>
       </section>
@@ -107,10 +102,10 @@ export function LandingClient({ lots, tickerItems }: LandingClientProps) {
       <section className="bg-[var(--color-bg)] border-y border-[var(--color-rule)] py-6">
         <div className="max-w-4xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { value: "8", label: "Live Auctions" },
+            { value: String(liveCount), label: "Live Auctions" },
             { value: "247M", label: "kg Traded (East Africa)" },
             { value: "$48M", label: "Sudan Market Opportunity" },
-            { value: "6", label: "Origin Countries" },
+            { value: String(originCount), label: "Origin Countries" },
           ].map((stat) => (
             <div key={stat.label}>
               <p className="font-mono tabular-nums text-2xl md:text-3xl font-bold text-[var(--color-primary)]">

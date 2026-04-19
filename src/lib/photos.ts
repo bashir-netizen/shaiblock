@@ -3,30 +3,41 @@
 // Using Unsplash with stable photo IDs + picsum fallback
 // ============================================================
 
-// Curated set of tea-related Unsplash photos (hero images)
+// ------------------------------------------------------------
+// Photo palette. Each ID has been verified to load and is used
+// across TEA_HEROES and TCR_PHOTOS. Adding a new photo: define
+// the base URL once here, reference it below.
+// ------------------------------------------------------------
+const DRY_LEAF_DARK = "https://images.unsplash.com/photo-1576092768241-dec231879fc3"; // orthodox dry black leaves
+const LIGHT_BUDS = "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2";   // white-tea silver tips
+const DARJEELING_CUP = "https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5"; // darjeeling tasting cup
+const CHINESE_TEA_SET = "https://images.unsplash.com/photo-1545665225-b23b99e4d45e"; // chinese teapot + cups
+const STYLED_CUP = "https://images.unsplash.com/photo-1556881286-fc6915169721";       // single tea cup from above
+const TEA_SERVICE = "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256";      // tea service on tray
+const WET_INFUSION = "https://images.unsplash.com/photo-1563822249366-3efb23b8e0c9";  // brewed-out wet leaves
+const PACKAGING_STILL = "https://images.unsplash.com/photo-1544787219-7f47ccb76574";  // packaging / tins
+const PLANTATION = "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9";    // tea plantation vista
+
+const hero = (base: string) => `${base}?w=1200&q=80`;
+const tcr = (base: string) => `${base}?w=800&q=80`;
+
+// Lot hero / thumbnail assignments. Each lot gets a visually distinct
+// photo where possible; a few duplicates across lots of the same
+// origin/style are intentional.
 export const TEA_HEROES: Record<string, string> = {
-  // Kenya / black tea
-  lot1: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=1200&q=80", // dry black tea leaves
-  // Darjeeling first flush
-  lot2: "https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?w=1200&q=80", // darjeeling tea
-  // Ceylon silver tips white tea
-  lot3: "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?w=1200&q=80", // white tea buds
-  // Pu-erh cake
-  lot4: "https://images.unsplash.com/photo-1545665225-b23b99e4d45e?w=1200&q=80", // chinese tea set
-  // Rwanda Highlands orthodox black
-  lot5: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=1200&q=80", // dry black tea leaves
-  // Kenya CTC
-  lot6: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=1200&q=80", // tea cup from above
-  // Ceylon OP1
-  lot7: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?w=1200&q=80", // tea service
-  // Tie Guan Yin oolong — reuse the Chinese tea set photo (thematic fit)
-  lot8: "https://images.unsplash.com/photo-1545665225-b23b99e4d45e?w=1200&q=80",
-  // Ended lots
-  lot9: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=1200&q=80",
-  lot10: "https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?w=1200&q=80",
+  lot1: hero(DRY_LEAF_DARK),    // Kenya Kericho Gold — black orthodox
+  lot2: hero(DARJEELING_CUP),   // Darjeeling 1st flush
+  lot3: hero(LIGHT_BUDS),       // Ceylon silver tips — white
+  lot4: hero(CHINESE_TEA_SET),  // Pu-erh — fits Chinese aesthetic
+  lot5: hero(WET_INFUSION),     // Rwanda orthodox — wet leaf angle
+  lot6: hero(STYLED_CUP),       // Kenya CTC — tasting cup
+  lot7: hero(TEA_SERVICE),      // Ceylon OP1 — full service
+  lot8: hero(CHINESE_TEA_SET),  // Tie Guan Yin — Chinese oolong
+  lot9: hero(PACKAGING_STILL),  // Kenya BOP1 (ended) — packaging
+  lot10: hero(DARJEELING_CUP),  // Darjeeling (ended)
 };
 
-// TCR photo slots — same set, different angles
+// TCR photo slots — dry leaf / wet leaf / liquor / packaging.
 export const TCR_PHOTOS: Record<string, {
   dry: string;
   wet: string;
@@ -34,81 +45,76 @@ export const TCR_PHOTOS: Record<string, {
   packaging: string;
 }> = {
   lot1: {
-    dry: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1563822249366-3efb23b8e0c9?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=800&q=80",
-    packaging: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80",
+    dry: tcr(DRY_LEAF_DARK),
+    wet: tcr(WET_INFUSION),
+    liquor: tcr(STYLED_CUP),
+    packaging: tcr(PLANTATION),
   },
   lot2: {
-    dry: "https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?w=800&q=80",
-    packaging: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80",
+    dry: tcr(DARJEELING_CUP),
+    wet: tcr(LIGHT_BUDS),
+    liquor: tcr(TEA_SERVICE),
+    packaging: tcr(PLANTATION),
   },
   lot3: {
-    dry: "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&q=80",
-    packaging: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80",
+    dry: tcr(LIGHT_BUDS),
+    wet: tcr(DRY_LEAF_DARK),
+    liquor: tcr(PACKAGING_STILL),
+    packaging: tcr(PLANTATION),
   },
   lot4: {
-    dry: "https://images.unsplash.com/photo-1545665225-b23b99e4d45e?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1563822249366-3efb23b8e0c9?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?w=800&q=80",
-    packaging: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&q=80",
+    dry: tcr(CHINESE_TEA_SET),
+    wet: tcr(WET_INFUSION),
+    liquor: tcr(TEA_SERVICE),
+    packaging: tcr(PACKAGING_STILL),
   },
   lot5: {
-    dry: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1563822249366-3efb23b8e0c9?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=800&q=80",
-    packaging: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80",
+    dry: tcr(DRY_LEAF_DARK),
+    wet: tcr(WET_INFUSION),
+    liquor: tcr(STYLED_CUP),
+    packaging: tcr(PLANTATION),
   },
   lot6: {
-    dry: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?w=800&q=80",
-    packaging: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80",
+    dry: tcr(STYLED_CUP),
+    wet: tcr(DRY_LEAF_DARK),
+    liquor: tcr(TEA_SERVICE),
+    packaging: tcr(PLANTATION),
   },
   lot7: {
-    dry: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=800&q=80",
-    packaging: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80",
+    dry: tcr(TEA_SERVICE),
+    wet: tcr(DRY_LEAF_DARK),
+    liquor: tcr(STYLED_CUP),
+    packaging: tcr(PLANTATION),
   },
   lot8: {
-    dry: "https://images.unsplash.com/photo-1545665225-b23b99e4d45e?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?w=800&q=80",
-    packaging: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80",
+    dry: tcr(CHINESE_TEA_SET),
+    wet: tcr(STYLED_CUP),
+    liquor: tcr(TEA_SERVICE),
+    packaging: tcr(PLANTATION),
   },
   lot9: {
-    dry: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?w=800&q=80",
-    packaging: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80",
+    dry: tcr(STYLED_CUP),
+    wet: tcr(DRY_LEAF_DARK),
+    liquor: tcr(TEA_SERVICE),
+    packaging: tcr(PLANTATION),
   },
   lot10: {
-    dry: "https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?w=800&q=80",
-    wet: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&q=80",
-    liquor: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?w=800&q=80",
-    packaging: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80",
+    dry: tcr(DARJEELING_CUP),
+    wet: tcr(DRY_LEAF_DARK),
+    liquor: tcr(TEA_SERVICE),
+    packaging: tcr(PLANTATION),
   },
 };
 
 // Landing page hero background — tea plantation vista
-export const HERO_BG =
-  "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=1920&q=90";
+export const HERO_BG = `${PLANTATION}?w=1920&q=90`;
 
 // Landing page "story" images
 export const STORY_IMAGES = {
-  plantation:
-    "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=1200&q=80",
-  harvester:
-    "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=1200&q=80",
-  cupping:
-    "https://images.unsplash.com/photo-1556881286-fc6915169721?w=1200&q=80",
-  packaging:
-    "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=1200&q=80",
+  plantation: `${PLANTATION}?w=1200&q=80`,
+  harvester: `${DRY_LEAF_DARK}?w=1200&q=80`,
+  cupping: `${STYLED_CUP}?w=1200&q=80`,
+  packaging: `${PACKAGING_STILL}?w=1200&q=80`,
 };
 
 // Fallback generator (picsum with seed for consistency)

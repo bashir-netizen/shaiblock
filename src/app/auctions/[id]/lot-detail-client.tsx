@@ -69,7 +69,6 @@ export function LotDetailClient({ lot, bids, seller, soldLots, tickerItems }: Lo
     bids: liveBids,
     currentHigh,
     newBidFlash,
-    bidCount,
     investorIsHighest,
     placeInvestorBid,
   } = useSimulatedBidding({
@@ -93,10 +92,10 @@ export function LotDetailClient({ lot, bids, seller, soldLots, tickerItems }: Lo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clock.phase]);
 
-  // Single source of truth for outbid toasts. Previously BidPanel owned
-  // this effect, but two BidPanel instances mount (mobile + desktop hidden)
-  // and both fired — producing duplicate toasts on every sim bid. Hoisting
-  // to the parent means one effect, one toast, regardless of render count.
+  // Single source of truth for outbid toasts. BidPanel used to own this
+  // effect, which caused duplicate toasts when there were ever multiple
+  // panel instances mounted; hoisting to the parent keeps it to one toast
+  // per outbid regardless of layout changes.
   const { showToast } = useToast();
   const prevHighRef = useRef<number>(initialHighBid);
   const outbidMountedRef = useRef(false);
@@ -146,7 +145,7 @@ export function LotDetailClient({ lot, bids, seller, soldLots, tickerItems }: Lo
   const cuppedByLabel = lot.cupped_by || seller.company_name || seller.display_name;
 
   return (
-    <div className="pb-[280px] bg-background">
+    <div className="pb-[112px] bg-background">
       {/* ── Live auction engine phase overlays ── */}
       {clock.phase === "main_ended" && <MainEndedOverlay />}
       {clock.phase === "pending_review" && (
@@ -213,7 +212,7 @@ export function LotDetailClient({ lot, bids, seller, soldLots, tickerItems }: Lo
         grade={lot.grade}
       />
 
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-5xl mx-auto">
           <LotDetailTabs
             marketFeedContent={
               <div>
@@ -443,15 +442,12 @@ export function LotDetailClient({ lot, bids, seller, soldLots, tickerItems }: Lo
           />
       </div>
 
-      {/* Mobile pinned bid panel — always-expanded compact layout */}
+      {/* Pinned bid panel — always-expanded compact layout */}
       <BidPanel
         lot={lot}
-        initialHighBid={initialHighBid}
         currentHigh={currentHigh}
         newBidFlash={newBidFlash}
-        bidCount={bidCount}
         onPlaceInvestorBid={placeInvestorBid}
-        mobileMode="pinned"
       />
 
       <style jsx global>{`

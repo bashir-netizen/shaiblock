@@ -229,13 +229,20 @@ body {
   animation: ticker-scroll 35s linear infinite;
 }
 
+@keyframes slide-up-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.animate-slide-up-in { animation: slide-up-in 0.3s ease-out; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-steam,
   .animate-stamp-land,
   .animate-kettle-pulse,
   .animate-skeleton-breathe,
   .animate-pulse-danger,
-  .animate-flash-green {
+  .animate-flash-green,
+  .animate-slide-up-in {
     animation: none !important;
   }
 }

@@ -15,7 +15,7 @@ const ESTIMATED_SHIPPING_USD = 14;
 
 interface ClosingRoundSheetProps {
   lot: Lot;
-  topTwo: [investor: SimulatedBid, opponent: SimulatedBid];
+  topTwo: [SimulatedBid, SimulatedBid];
   closingRoundBids: SimulatedBid[];
   msRemaining: number;
   extendedCount: number;
@@ -102,31 +102,51 @@ export function ClosingRoundSheet({
   onPlaceBid,
   onConcede,
 }: ClosingRoundSheetProps) {
+  const investorInRound = topTwo.some((b) => b.is_investor);
+
+  // Investor (when present) sits on the left. Otherwise preserve the
+  // incoming order — topTwo[0] is the higher-priced finalist.
+  const investorIdx = topTwo.findIndex((b) => b.is_investor);
+  const [leftSeed, rightSeed] =
+    investorIdx === 1 ? [topTwo[1], topTwo[0]] : [topTwo[0], topTwo[1]];
+
   // Current state from closingRoundBids
   const allBids = closingRoundBids.length > 0 ? closingRoundBids : topTwo;
   const highest = allBids.reduce(
     (hi, b) => (b.amount_per_kg > hi.amount_per_kg ? b : hi),
     allBids[0]
   );
-  const investorCurrent =
-    allBids
-      .filter((b) => b.is_investor)
-      .reduce(
-        (hi, b) => (b.amount_per_kg > hi.amount_per_kg ? b : hi),
-        topTwo[0]
-      );
-  const opponentCurrent =
-    allBids
-      .filter((b) => !b.is_investor)
-      .reduce(
-        (hi, b) => (b.amount_per_kg > hi.amount_per_kg ? b : hi),
-        topTwo[1]
-      );
 
-  const investorIsWinning = highest.is_investor === true;
+  // Find the current high for each side. Investor side matches by
+  // is_investor; sim sides match by buyer_id so alternating bumps in
+  // both-sim mode track to the right column.
+  const matchSide = (side: SimulatedBid) =>
+    side.is_investor
+      ? (b: SimulatedBid) => b.is_investor === true
+      : (b: SimulatedBid) => !b.is_investor && b.buyer_id === side.buyer_id;
+
+  const leftCurrent = allBids
+    .filter(matchSide(leftSeed))
+    .reduce(
+      (hi, b) => (b.amount_per_kg > hi.amount_per_kg ? b : hi),
+      leftSeed
+    );
+  const rightCurrent = allBids
+    .filter(matchSide(rightSeed))
+    .reduce(
+      (hi, b) => (b.amount_per_kg > hi.amount_per_kg ? b : hi),
+      rightSeed
+    );
+
+  const leftIsWinning = highest.id === leftCurrent.id ||
+    highest.amount_per_kg === leftCurrent.amount_per_kg;
+  const investorIsWinning = investorInRound && highest.is_investor === true;
+  const investorCurrent = investorInRound
+    ? (leftCurrent.is_investor ? leftCurrent : rightCurrent)
+    : null;
   const nextBidAmount = +(highest.amount_per_kg + lot.bid_increment).toFixed(2);
 
-  // Landed cost preview
+  // Landed cost preview (only shown when investor is in the round)
   const subtotal = +(nextBidAmount * lot.total_kg).toFixed(2);
   const premium = +((subtotal * BUYER_PREMIUM_PCT) / 100).toFixed(2);
   const landed = +(subtotal + premium + ESTIMATED_SHIPPING_USD).toFixed(2);
@@ -158,17 +178,17 @@ export function ClosingRoundSheet({
       <div className="flex-1 flex items-center justify-center px-4 md:px-12 py-6">
         <div className="w-full max-w-3xl grid grid-cols-[1fr_auto_1fr] gap-3 md:gap-6 items-stretch">
           <BidderColumn
-            bid={investorCurrent}
-            isWinning={investorIsWinning}
-            isInvestor={true}
+            bid={leftCurrent}
+            isWinning={leftIsWinning}
+            isInvestor={leftCurrent.is_investor === true}
           />
           <div className="flex items-center justify-center text-white font-serif text-xl md:text-3xl italic">
             vs
           </div>
           <BidderColumn
-            bid={opponentCurrent}
-            isWinning={!investorIsWinning}
-            isInvestor={false}
+            bid={rightCurrent}
+            isWinning={!leftIsWinning}
+            isInvestor={rightCurrent.is_investor === true}
           />
         </div>
       </div>
@@ -191,36 +211,52 @@ export function ClosingRoundSheet({
             Extended +{extendedCount * 15}s
           </p>
         )}
-        <p className="text-white/70 text-xs mt-2">
-          Subtotal {formatPrice(subtotal)} + Premium {formatPrice(premium)} +
-          Ship {formatPrice(ESTIMATED_SHIPPING_USD)} ={" "}
-          <span className="font-bold text-white">{formatPrice(landed)}</span> /{" "}
-          <span className="text-white/60">{formatSDG(landed)}</span>
-        </p>
+        {investorInRound && (
+          <p className="text-white/70 text-xs mt-2">
+            Subtotal {formatPrice(subtotal)} + Premium {formatPrice(premium)} +
+            Ship {formatPrice(ESTIMATED_SHIPPING_USD)} ={" "}
+            <span className="font-bold text-white">{formatPrice(landed)}</span>{" "}
+            / <span className="text-white/60">{formatSDG(landed)}</span>
+          </p>
+        )}
       </div>
 
-      {/* Primary CTA */}
+      {/* Primary CTA — bid controls when investor is in the round,
+          spectator caption otherwise. */}
       <div className="shrink-0 px-4 md:px-12 pb-6">
-        <button
-          onClick={() => onPlaceBid(nextBidAmount)}
-          disabled={investorIsWinning}
-          className={cn(
-            "w-full rounded-xl py-5 font-bold text-lg shadow-xl transition-all",
-            investorIsWinning
-              ? "bg-white/10 text-white/60 cursor-not-allowed"
-              : "bg-accent hover:bg-[var(--color-accent-hot)] text-white shadow-accent/30"
-          )}
-        >
-          {investorIsWinning
-            ? `You're winning at ${formatPrice(investorCurrent.amount_per_kg)}/kg`
-            : `Raise to ${formatPrice(nextBidAmount)}/kg`}
-        </button>
-        <button
-          onClick={onConcede}
-          className="w-full text-white/70 hover:text-white text-sm mt-4 underline-offset-2 hover:underline"
-        >
-          Let it go — concede
-        </button>
+        {investorInRound && investorCurrent ? (
+          <>
+            <button
+              onClick={() => onPlaceBid(nextBidAmount)}
+              disabled={investorIsWinning}
+              className={cn(
+                "w-full rounded-xl py-5 font-bold text-lg shadow-xl transition-all",
+                investorIsWinning
+                  ? "bg-white/10 text-white/60 cursor-not-allowed"
+                  : "bg-accent hover:bg-[var(--color-accent-hot)] text-white shadow-accent/30"
+              )}
+            >
+              {investorIsWinning
+                ? `You're winning at ${formatPrice(investorCurrent.amount_per_kg)}/kg`
+                : `Raise to ${formatPrice(nextBidAmount)}/kg`}
+            </button>
+            <button
+              onClick={onConcede}
+              className="w-full text-white/70 hover:text-white text-sm mt-4 underline-offset-2 hover:underline"
+            >
+              Let it go — concede
+            </button>
+          </>
+        ) : (
+          <div className="text-center">
+            <p className="text-white/80 text-sm uppercase tracking-widest font-semibold">
+              Watching the closing round
+            </p>
+            <p className="text-white/50 text-xs mt-1">
+              Two retailers battling for this lot · you are a spectator
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

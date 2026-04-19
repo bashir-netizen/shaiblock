@@ -26,7 +26,7 @@ import { DEMO_BUYER_NAMES, DEMO_BUYER_CITIES } from "@/lib/photos";
 
 const MAIN_ENDED_TRANSITION_MS = 1500;
 const PENDING_REVIEW_MS = 3000;
-const CLOSING_ROUND_DURATION_MS = 20_000;
+const CLOSING_ROUND_DURATION_MS = 15_000;
 const CLOSING_ROUND_EXTENSION_MS = 5_000;
 const CLOSING_ROUND_MAX_EXTENSIONS = 3;
 const HAMMERED_STAMP_MS = 3000;
@@ -41,14 +41,12 @@ export interface UseAuctionClockResult {
   phase: AuctionPhase;
   msRemaining: number;
   extendedCount: number;
-  topTwo: [investor: SimulatedBid, opponent: SimulatedBid] | null;
+  topTwo: [SimulatedBid, SimulatedBid] | null;
   winner: SimulatedBid | null;
   reserveMet: boolean;
   closingRoundBids: SimulatedBid[];
   /** Called by parent at main_ended with the snapshotted top two bids. */
-  setTopTwo: (
-    pair: [investor: SimulatedBid, opponent: SimulatedBid]
-  ) => void;
+  setTopTwo: (pair: [SimulatedBid, SimulatedBid]) => void;
   /** Called by ClosingRoundSheet when investor confirms a raise. */
   placeClosingRoundBid: (amount: number) => void;
   /** Called by ClosingRoundSheet's "Let it go" button. */
@@ -176,13 +174,23 @@ export function useAuctionClock({
   useEffect(() => {
     if (phase !== "closing_round" || !topTwo) return;
 
-    // Seed opponent identity (use the topTwo opponent name/city)
-    opponentIdentityRef.current = {
-      name: topTwo[1].buyer_display_name,
-      city: topTwo[1].buyer_city,
-    };
-    investorWinsRef.current =
-      Math.random() < CLOSING_ROUND_INVESTOR_WIN_PROBABILITY;
+    // Seed opponent identity. When the investor is one of the two
+    // finalists, the "opponent" is the other finalist. When neither
+    // is the investor, the AI runs in both-sim mode (see
+    // scheduleOpponentBid below) and this identity is unused.
+    const investorInRound = topTwo.some((b) => b.is_investor);
+    if (investorInRound) {
+      const nonInvestor = topTwo.find((b) => !b.is_investor) ?? topTwo[1];
+      opponentIdentityRef.current = {
+        name: nonInvestor.buyer_display_name,
+        city: nonInvestor.buyer_city,
+      };
+      investorWinsRef.current =
+        Math.random() < CLOSING_ROUND_INVESTOR_WIN_PROBABILITY;
+    } else {
+      opponentIdentityRef.current = null;
+      investorWinsRef.current = false;
+    }
 
     setClosingRoundBids([topTwo[0], topTwo[1]]);
     closingRoundEndAtRef.current = Date.now() + CLOSING_ROUND_DURATION_MS;
@@ -259,35 +267,58 @@ export function useAuctionClock({
         const highest = current.reduce((hi, b) =>
           b.amount_per_kg > hi.amount_per_kg ? b : hi
         );
-        if (!highest.is_investor) {
-          // Opponent already winning — wait for investor.
-          return current;
+        const investorInRound = current.some((b) => b.is_investor);
+
+        if (investorInRound) {
+          if (!highest.is_investor) {
+            // Opponent already winning — wait for investor.
+            return current;
+          }
+          const willBid = investorWinsRef.current
+            ? Math.random() < 0.4
+            : Math.random() < 0.9;
+          if (!willBid) return current;
+
+          const opp = opponentIdentityRef.current ?? randomOpponent();
+          const newAmount = +(highest.amount_per_kg + lot.bid_increment).toFixed(2);
+          const newBid: SimulatedBid = {
+            id: `opp-${Date.now()}-${Math.random()}`,
+            lot_id: lot.id,
+            buyer_id: "sim-opponent",
+            amount_per_kg: newAmount,
+            kg_requested: lot.total_kg,
+            is_winning: true,
+            status: "active",
+            bid_source: "manual",
+            placed_at: new Date().toISOString(),
+            buyer_display_name: opp.name,
+            buyer_city: opp.city,
+            is_investor: false,
+            is_new: true,
+          };
+          maybeExtend();
+          return [newBid, ...current];
         }
 
-        // Decide whether to bid based on win probability.
-        const willBid = investorWinsRef.current
-          ? Math.random() < 0.4
-          : Math.random() < 0.9;
-
-        if (!willBid) return current;
-
-        const opp =
-          opponentIdentityRef.current ?? randomOpponent();
-        const newAmount = +(highest.amount_per_kg + lot.bid_increment).toFixed(
-          2
+        // Both-sim mode — alternate bumps between the two finalists.
+        // Whoever is currently losing gets the next bid.
+        const losing = current.find(
+          (b) => b.id !== highest.id && !b.is_investor
         );
+        if (!losing) return current;
+        const newAmount = +(highest.amount_per_kg + lot.bid_increment).toFixed(2);
         const newBid: SimulatedBid = {
-          id: `opp-${Date.now()}-${Math.random()}`,
+          id: `sim-cr-${Date.now()}-${Math.random()}`,
           lot_id: lot.id,
-          buyer_id: "sim-opponent",
+          buyer_id: losing.buyer_id,
           amount_per_kg: newAmount,
           kg_requested: lot.total_kg,
           is_winning: true,
           status: "active",
           bid_source: "manual",
           placed_at: new Date().toISOString(),
-          buyer_display_name: opp.name,
-          buyer_city: opp.city,
+          buyer_display_name: losing.buyer_display_name,
+          buyer_city: losing.buyer_city,
           is_investor: false,
           is_new: true,
         };
@@ -373,59 +404,34 @@ export function useAuctionClock({
 
 // ============================================================
 // computeTopTwo — helper for parent to call at main_ended
-// Returns [investor, opponent] guaranteed to include the investor.
+// Returns the two highest bids by price, regardless of who placed them.
+// If the investor didn't bid above the #2 sim bidder, they are NOT in
+// the closing round — the sheet renders in spectator mode.
 // ============================================================
 export function computeTopTwo(
   bids: SimulatedBid[],
   lot: Lot
-): [investor: SimulatedBid, opponent: SimulatedBid] {
-  const investorBids = bids.filter((b) => b.is_investor === true);
-  let investorBid: SimulatedBid;
-  if (investorBids.length > 0) {
-    investorBid = investorBids.reduce((hi, b) =>
-      b.amount_per_kg > hi.amount_per_kg ? b : hi
-    );
-  } else {
-    // Fabricate a floor investor bid so the closing round always fires
-    investorBid = {
-      id: `investor-floor-${Date.now()}`,
+): [SimulatedBid, SimulatedBid] {
+  const sorted = [...bids].sort((a, b) => b.amount_per_kg - a.amount_per_kg);
+
+  // Defensive padding for the edge case where a lot has < 2 seeded bids.
+  // Shouldn't happen with current mock data but guards against a crash.
+  while (sorted.length < 2) {
+    sorted.push({
+      id: `filler-${sorted.length}-${Date.now()}`,
       lot_id: lot.id,
-      buyer_id: "investor",
+      buyer_id: "sim-filler",
       amount_per_kg: lot.starting_price_per_kg,
       kg_requested: lot.total_kg,
       is_winning: false,
       status: "active",
       bid_source: "manual",
       placed_at: new Date().toISOString(),
-      buyer_display_name: "You",
+      buyer_display_name: "—",
       buyer_city: "—",
-      is_investor: true,
-    };
-  }
-
-  const nonInvestorBids = bids.filter((b) => !b.is_investor);
-  let opponentBid: SimulatedBid;
-  if (nonInvestorBids.length > 0) {
-    opponentBid = nonInvestorBids.reduce((hi, b) =>
-      b.amount_per_kg > hi.amount_per_kg ? b : hi
-    );
-  } else {
-    // Fabricate a plausible opponent
-    opponentBid = {
-      id: `opponent-floor-${Date.now()}`,
-      lot_id: lot.id,
-      buyer_id: "sim-opponent",
-      amount_per_kg: lot.starting_price_per_kg + lot.bid_increment,
-      kg_requested: lot.total_kg,
-      is_winning: false,
-      status: "active",
-      bid_source: "manual",
-      placed_at: new Date().toISOString(),
-      buyer_display_name: "Khalid H.",
-      buyer_city: "Khartoum",
       is_investor: false,
-    };
+    });
   }
 
-  return [investorBid, opponentBid];
+  return [sorted[0], sorted[1]];
 }
